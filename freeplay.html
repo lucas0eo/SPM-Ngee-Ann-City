@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grid Game</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<style>
+
+</style>
+<body>
+    <div class="container">
+        <div id="menu">
+            <h2>Free Play Menu</h2>
+            <form id="placeLetterForm">
+                <label for="coordinate">Coordinate (e.g., A1):</label>
+                <input type="text" id="coordinate" name="coordinate">
+                <label for="letter">Letter (O, I, C):</label>
+                <input type="text" id="letter" name="letter" maxlength="1">
+                <button type="submit">Place Letter</button>
+            </form>
+            <div id="randomLetters">
+                <h3>Randomly Selected Letters:</h3>
+                <p id="randomLetter1">Letter 1: </p>
+                <p id="randomLetter2">Letter 2: </p>
+            </div>
+            <div>
+                <button id="saveGame">Go home and save Game</button>
+                <button id="loadGame">Load Saved Game</button>
+            </div>
+        </div>
+        <div id="gameBoard">
+            <h2>Game Board</h2>
+            <div id="grid"></div>
+        </div>
+    </div>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+    let boardSize = 5; // Example size, change as needed
+    let board = Array.from({ length: boardSize }, () => Array(boardSize).fill(' '));
+    let gridContainer = document.getElementById('grid');
+    let placeLetterForm = document.getElementById('placeLetterForm');
+    let randomLetter1Element = document.getElementById('randomLetter1');
+    let randomLetter2Element = document.getElementById('randomLetter2');
+
+    // Function to get random letters 'O', 'I', 'C', '*', 'R'
+    function getRandomLetters() {
+        const letters = ['O', 'I', 'C', '*', 'R'];
+        const randomLetters = [];
+        while (randomLetters.length < 2) {
+            const letter = letters[Math.floor(Math.random() * letters.length)];
+            if (!randomLetters.includes(letter)) {
+                randomLetters.push(letter);
+            }
+        }
+        return randomLetters;
+    }
+
+    // Function to update and display random letters
+    function updateRandomLetters() {
+        let [randomLetter1, randomLetter2] = getRandomLetters();
+        randomLetter1Element.textContent = `Letter 1: ${randomLetter1}`;
+        randomLetter2Element.textContent = `Letter 2: ${randomLetter2}`;
+    }
+
+    // Get initial random letters for the game
+    let [randomLetter1, randomLetter2] = getRandomLetters();
+
+    // Display initial random letters
+    randomLetter1Element.textContent += randomLetter1;
+    randomLetter2Element.textContent += randomLetter2;
+
+    function printBoard() {
+        gridContainer.innerHTML = '';
+        gridContainer.style.gridTemplateColumns = `repeat(${boardSize + 1}, 30px)`;
+
+        const columnHeaders = document.createElement('div');
+        columnHeaders.classList.add('grid-header');
+        columnHeaders.textContent = ' ';
+        gridContainer.appendChild(columnHeaders);
+
+        for (let i = 0; i < boardSize; i++) {
+            const headerCell = document.createElement('div');
+            headerCell.classList.add('grid-header');
+            headerCell.textContent = i + 1;
+            gridContainer.appendChild(headerCell);
+        }
+
+        for (let r = 0; r < boardSize; r++) {
+            const rowHeader = document.createElement('div');
+            rowHeader.classList.add('grid-header');
+            rowHeader.textContent = String.fromCharCode(65 + r);
+            gridContainer.appendChild(rowHeader);
+
+            for (let c = 0; c < boardSize; c++) {
+                const cell = document.createElement('div');
+                cell.classList.add('grid-cell');
+                cell.textContent = board[r][c];
+                gridContainer.appendChild(cell);
+            }
+        }
+    }
+
+    function convertCoord(coord) {
+        const regex = /^([A-Za-z])(\d+)$/;
+        const match = coord.match(regex);
+        if (!match) return [null, null];
+        const row = match[1].toUpperCase().charCodeAt(0) - 65;
+        const col = parseInt(match[2], 10) - 1;
+        if (row >= 0 && row < boardSize && col >= 0 && col < boardSize) {
+            return [row, col];
+        } else {
+            return [null, null];
+        }
+    }
+
+    function placeLetter(coord, letter) {
+        const [row, col] = convertCoord(coord);
+        if (row !== null && col !== null && board[row][col] === ' ') {
+            // Check if the letter matches one of the randomly selected letters
+            if ((letter === randomLetter1 || letter === randomLetter2)) {
+                // Check if at least one adjacent cell is occupied for subsequent placements
+                    board[row][col] = letter;
+                    updateRandomLetters();
+                    return true;
+                }
+            }
+            }
+
+
+    function isAdjacentOccupied() {
+        const directions = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, 1], [1, 1], [-1, -1], [1, -1]];
+        for (let r = 0; r < boardSize; r++) {
+            for (let c = 0; c < boardSize; c++) {
+                if (board[r][c] !== ' ') {
+                    for (const [dr, dc] of directions) {
+                        const newRow = r + dr;
+                        const newCol = c + dc;
+                        if (newRow >= 0 && newRow < boardSize && newCol >= 0 && newCol < boardSize) {
+                            if (board[newRow][newCol] !== ' ') {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    placeLetterForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const coord = e.target.coordinate.value.trim();
+        const letter = e.target.letter.value.trim().toUpperCase();
+
+        if (['O', 'I', 'C', '*', 'R'].includes(letter) && placeLetter(coord, letter)) {
+            printBoard();
+        } else {
+            alert('Invalid input or cell cannot be placed without adjacent letter.');
+        }
+
+        e.target.coordinate.value = '';
+        e.target.letter.value = '';
+    });
+        // Save game state to local storage
+        function saveGame() {
+        const gameState = {
+            board,
+            randomLetter1,
+            randomLetter2
+        };
+        localStorage.setItem('gridGameState', JSON.stringify(gameState));
+        alert('Game saved!');
+    }
+
+    // Load game state from local storage
+    function loadGame() {
+        const gameState = JSON.parse(localStorage.getItem('gridGameState'));
+        if (gameState) {
+            board = gameState.board;
+            randomLetter1 = gameState.randomLetter1;
+            randomLetter2 = gameState.randomLetter2;
+            randomLetter1Element.textContent = `Letter 1: ${randomLetter1}`;
+            randomLetter2Element.textContent = `Letter 2: ${randomLetter2}`;
+            printBoard();
+            alert('Game loaded!');
+        } else {
+            alert('No saved game found!');
+        }
+    }
+
+    document.getElementById('saveGame').addEventListener('click', function () {
+        saveGame();
+        fadeOutAndNavigate('mainpage.html')
+    });
+    document.getElementById('loadGame').addEventListener('click', function () {
+        loadGame();
+    });
+    function fadeOutAndNavigate(targetUrl) {
+        document.body.style.transition = "opacity 2s";
+        document.body.style.opacity = "0";
+        setTimeout(function () {
+            window.location.href = targetUrl;
+        }, 2000); // Wait for the transition to complete
+    }
+    printBoard();
+});
+
+
+
+    </script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        #menu {
+            width: 20%;
+        }
+
+        #gameBoard {
+            width: 75%;
+        }
+
+        #grid {
+            display: grid;
+            gap: 2px;
+            margin-top: 20px;
+        }
+
+        .grid-cell {
+            border: 1px solid #000;
+            width: 30px;
+            height: 30px;
+            text-align: center;
+            line-height: 30px;
+            font-size: 20px;
+        }
+
+        .grid-header {
+            font-weight: bold;
+        }
+
+    </style>
+</body>
+
+</html>

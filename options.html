@@ -84,6 +84,10 @@
     document.getElementById('BACK').addEventListener('click', function () {
         fadeOutAndNavigate('mainpage.html');
     });
+    document.getElementById('continueContainer').addEventListener('click', function () {
+        fadeOutAndNavigate('freeplay.html');
+    });
+
     function fadeOutAndNavigate(targetUrl) {
         document.body.style.transition = "opacity 2s";
         document.body.style.opacity = "0";

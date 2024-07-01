@@ -26,6 +26,10 @@
                 <p id="randomLetter1">Letter 1: </p>
                 <p id="randomLetter2">Letter 2: </p>
             </div>
+            <div>
+                <button id="saveGame">Go home and save Game</button>
+                <button id="loadGame">Load Saved Game</button>
+            </div>
         </div>
         <div id="gameBoard">
             <h2>Game Board</h2>
@@ -34,7 +38,7 @@
     </div>
     <script>
     document.addEventListener('DOMContentLoaded', function () {
-    const boardSize = 20; // Example size, change as needed
+    let boardSize = 20; // Example size, change as needed
     let board = Array.from({ length: boardSize }, () => Array(boardSize).fill(' '));
     const gridContainer = document.getElementById('grid');
     const placeLetterForm = document.getElementById('placeLetterForm');
@@ -56,13 +60,13 @@
 
     // Function to update and display random letters
     function updateRandomLetters() {
-        const [randomLetter1, randomLetter2] = getRandomLetters();
+        let [randomLetter1, randomLetter2] = getRandomLetters();
         randomLetter1Element.textContent = `Letter 1: ${randomLetter1}`;
         randomLetter2Element.textContent = `Letter 2: ${randomLetter2}`;
     }
 
     // Get initial random letters for the game
-    const [randomLetter1, randomLetter2] = getRandomLetters();
+    let [randomLetter1, randomLetter2] = getRandomLetters();
 
     // Display initial random letters
     randomLetter1Element.textContent += randomLetter1;
@@ -180,6 +184,49 @@
         e.target.coordinate.value = '';
         e.target.letter.value = '';
     });
+
+            // Save game state to local storage
+            function saveGame() {
+        const gameState = {
+            board,
+            randomLetter1,
+            randomLetter2
+        };
+        localStorage.setItem('gridGameState', JSON.stringify(gameState));
+        alert('Game saved!');
+    }
+
+    // Load game state from local storage
+    function loadGame() {
+        const gameState = JSON.parse(localStorage.getItem('gridGameState'));
+        console.log("HI")
+        if (gameState) {
+            board = gameState.board;
+            randomLetter1 = gameState.randomLetter1;
+            randomLetter2 = gameState.randomLetter2;
+            randomLetter1Element.textContent = `Letter 1: ${randomLetter1}`;
+            randomLetter2Element.textContent = `Letter 2: ${randomLetter2}`;
+            printBoard();
+            alert('Game loaded!');
+        } else {
+            alert('No saved game found!');
+        }
+    }
+
+    document.getElementById('saveGame').addEventListener('click', function () {
+        saveGame();
+        fadeOutAndNavigate('mainpage.html')
+    });
+    document.getElementById('loadGame').addEventListener('click', function () {
+        loadGame();
+    });
+    function fadeOutAndNavigate(targetUrl) {
+        document.body.style.transition = "opacity 2s";
+        document.body.style.opacity = "0";
+        setTimeout(function () {
+            window.location.href = targetUrl;
+        }, 2000); // Wait for the transition to complete
+    }
 
     printBoard();
 });
