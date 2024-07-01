@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Stencil+Text:wght@600&family=Saira+Stencil+One&display=swap" rel="stylesheet">
+<title>Centered Container</title>
+<style>
+    body, html {
+        background-color: rgb(33, 40, 39);
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        width: 100vw;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .parent-container {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+    }
+    .logo {
+        position: relative;
+        scale: 0.5;
+        margin-right: 10%; /* Spacing between logo and containers */
+        margin-left: -10%;
+    }
+
+    .container, .container2 {
+        border-radius: 10px;
+        text-align: center;
+        padding: 20px;
+        background-color: rgb(51, 228, 151);
+        width: 500px;
+        height: 100px;
+        margin-bottom: 10%;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        transition: opacity 2s;
+        margin-left: -20%; /* Spacing between containers */
+    }
+    .homeContainer{
+        background-color: rgb(51, 228, 151); /*#ee5c17*/
+        display: flex;
+        border-radius: 10px;
+        width:140px;
+        height:140px;
+        margin-left:-20%;
+        margin-right:10%;
+    }
+    .leaderboardContainer{
+        background-color: rgb(51, 228, 151);
+        display: flex;
+        border-radius: 10px;
+        width:140px;
+        height:140px;
+        margin-right:10%;
+    }
+    .leaderboardImage{
+        scale:0.5;
+        margin-left:-5px;
+    }
+    .homeImage{
+        scale:0.7;
+    }
+    .newgame, .continue {
+        font-family: "Saira Stencil One", sans-serif;
+        font-weight: 400;
+        font-style: normal;
+        font-size: 50px;
+        margin-left: -20%;
+        font-style:oblique;
+    }
+    .title{
+        font-family: "Saira Stencil One", sans-serif;
+        font-weight: 400;
+        font-style: normal;
+        font-size: 120px;
+    }
+    .playImage {
+        scale: 0.5;
+        margin-right: 20%;
+        margin-left: -19%;
+    }
+    .parent{
+        display: flex;
+        flex-direction: column;
+    }
+    .side-by-side {
+        display: flex;
+        flex-direction: row;
+    }
+</style>
+</head>
+<body>
+<div class="parent-container">
+    <div class="logo">
+        <img src="images/logo.png" class="image">
+        <p class = "title"><span style="color: white;">N</span><span style="color: rgb(51, 228, 151);">GEE </span><span style="color: white;">A</span><span style="color: rgb(51, 228, 151);">NN </span><span style="color: white;">C</span><span style="color: rgb(51, 228, 151);">ITY</span></p>
+    </div>
+    <div class = "parent">
+    <div>
+        <div class="container" id="newGameContainer">
+            <img src="images/play logo.png" class="playImage">
+            <p class="newgame">NEW GAME</p>
+        </div>
+        <div class="container" id="continueContainer">
+            <img src="images/restart arrow.png" class="playImage">
+            <p class="continue">CONTINUE</p>
+        </div>
+    </div>
+    <div class="side-by-side">
+        <div class = "homeContainer" id = "homeContainer">
+            <img src = "images/home.png" class = "homeImage">
+        </div>
+        <div class = "leaderboardContainer" id = "leaderboardContainer">
+            <img src = "images/leaderboard.png" class = "leaderboardImage">
+        </div>
+        <div class = "leaderboardContainer" id = "leaderboardContainer">
+            <img src = "images/exit.png" class = "leaderboardImage">
+        </div>
+    </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('newGameContainer').addEventListener('click', function () {
+        fadeOutAndNavigate('options.html');
+    });
+    document.getElementById('continueContainer').addEventListener('click', function () {
+        fadeOutAndNavigate('continue.html');
+    });
+
+    function fadeOutAndNavigate(targetUrl) {
+        document.body.style.transition = "opacity 2s";
+        document.body.style.opacity = "0";
+        setTimeout(function () {
+            window.location.href = targetUrl;
+        }, 2000); // Wait for the transition to complete
+    }
+</script>
+</body>
+</html>
+
+
+

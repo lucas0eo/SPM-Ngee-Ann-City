@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Stencil+Text:wght@600&family=Saira+Stencil+One&display=swap" rel="stylesheet">
+<title>Centered Container</title>
+<style>
+    body, html {
+        background-color: rgb(33, 40, 39);
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        width: 100vw;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .container, .container2 {
+        border-radius: 10px;
+        text-align: center;
+        padding: 20px;
+        background-color: rgb(51, 228, 151);
+        width: 500px;
+        height: 100px;
+        margin-bottom: 10%;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        transition: opacity 2s;
+    }
+    .backcontainer{
+        width:150px;
+        border-radius: 10px;
+        text-align: center;
+        padding: 20px;
+        background-color: rgb(51, 228, 151);
+        height: 100px;
+        margin-bottom: 10%;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        transition: opacity 2s;
+    }
+    .newgame, .continue{
+        font-family: "Saira Stencil One", sans-serif;
+        font-weight: 400;
+        font-style: normal;
+        font-size: 50px;
+    }
+    .back{
+        font-family: "Saira Stencil One", sans-serif;
+        font-weight: 400;
+        font-style: normal;
+        font-size: 40px;
+    }
+</style>
+</head>
+<body>
+    <div class = "parent">
+        <div>
+            <div class="container" id="newGameContainer">
+                <p class="newgame">ARCADE MODE</p>
+            </div>
+            <div class="container" id="continueContainer">
+                <p class="continue">FREE PLAY</p>
+            </div>
+            <div class="backcontainer" id = "BACK">
+                <p class = "back">Back</p>
+            </div>
+        </div>
+    </div>
+</body>
+<script>
+    document.getElementById('newGameContainer').addEventListener('click', function () {
+        fadeOutAndNavigate('game.html');
+    });
+    document.getElementById('BACK').addEventListener('click', function () {
+        fadeOutAndNavigate('mainpage.html');
+    });
+    function fadeOutAndNavigate(targetUrl) {
+        document.body.style.transition = "opacity 2s";
+        document.body.style.opacity = "0";
+        setTimeout(function () {
+            window.location.href = targetUrl;
+        }, 2000); // Wait for the transition to complete
+    }
+</script>
+</html>
