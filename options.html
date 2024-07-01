@@ -79,12 +79,14 @@
 </body>
 <script>
     document.getElementById('newGameContainer').addEventListener('click', function () {
+        localStorage.setItem('selectedGameMode', 'arcade');
         fadeOutAndNavigate('game.html');
     });
     document.getElementById('BACK').addEventListener('click', function () {
         fadeOutAndNavigate('mainpage.html');
     });
     document.getElementById('continueContainer').addEventListener('click', function () {
+        localStorage.setItem('selectedGameMode', 'freeplay');
         fadeOutAndNavigate('freeplay.html');
     });
 

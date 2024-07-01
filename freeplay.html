@@ -17,18 +17,14 @@
             <form id="placeLetterForm">
                 <label for="coordinate">Coordinate (e.g., A1):</label>
                 <input type="text" id="coordinate" name="coordinate">
-                <label for="letter">Letter (O, I, C):</label>
+                <label for="letter">Letter (O, I, C, *, R):</label>
                 <input type="text" id="letter" name="letter" maxlength="1">
                 <button type="submit">Place Letter</button>
             </form>
-            <div id="randomLetters">
-                <h3>Randomly Selected Letters:</h3>
-                <p id="randomLetter1">Letter 1: </p>
-                <p id="randomLetter2">Letter 2: </p>
-            </div>
             <div>
                 <button id="saveGame">Go home and save Game</button>
                 <button id="loadGame">Load Saved Game</button>
+                <button id="back">Quit game</button>
             </div>
         </div>
         <div id="gameBoard">
@@ -42,35 +38,15 @@
     let board = Array.from({ length: boardSize }, () => Array(boardSize).fill(' '));
     let gridContainer = document.getElementById('grid');
     let placeLetterForm = document.getElementById('placeLetterForm');
-    let randomLetter1Element = document.getElementById('randomLetter1');
-    let randomLetter2Element = document.getElementById('randomLetter2');
+    let referrer = sessionStorage.getItem('referrer');
 
-    // Function to get random letters 'O', 'I', 'C', '*', 'R'
-    function getRandomLetters() {
-        const letters = ['O', 'I', 'C', '*', 'R'];
-        const randomLetters = [];
-        while (randomLetters.length < 2) {
-            const letter = letters[Math.floor(Math.random() * letters.length)];
-            if (!randomLetters.includes(letter)) {
-                randomLetters.push(letter);
-            }
-        }
-        return randomLetters;
-    }
 
-    // Function to update and display random letters
-    function updateRandomLetters() {
-        let [randomLetter1, randomLetter2] = getRandomLetters();
-        randomLetter1Element.textContent = `Letter 1: ${randomLetter1}`;
-        randomLetter2Element.textContent = `Letter 2: ${randomLetter2}`;
-    }
+    // Define keys for saving game states
+    const FREE_PLAY_KEY = 'freePlayGridGameState';
+    const ARCADE_KEY = 'arcadeGridGameState';
+    let currentGameMode = 'freePlay';
+    
 
-    // Get initial random letters for the game
-    let [randomLetter1, randomLetter2] = getRandomLetters();
-
-    // Display initial random letters
-    randomLetter1Element.textContent += randomLetter1;
-    randomLetter2Element.textContent += randomLetter2;
 
     function printBoard() {
         gridContainer.innerHTML = '';
@@ -119,15 +95,21 @@
     function placeLetter(coord, letter) {
         const [row, col] = convertCoord(coord);
         if (row !== null && col !== null && board[row][col] === ' ') {
-            // Check if the letter matches one of the randomly selected letters
-            if ((letter === randomLetter1 || letter === randomLetter2)) {
-                // Check if at least one adjacent cell is occupied for subsequent placements
                     board[row][col] = letter;
-                    updateRandomLetters();
                     return true;
                 }
+            
             }
+        function isBoardEmpty() {
+        for (let r = 0; r < boardSize; r++) {
+            for (let c = 0; c < boardSize; c++) {
+                if (board[r][c] !== ' ') {
+                    return false; // Board is not empty if any cell is occupied
+                }
             }
+        }
+        return true; // Board is empty if all cells are spaces
+    }
 
 
     function isAdjacentOccupied() {
@@ -167,36 +149,51 @@
         // Save game state to local storage
         function saveGame() {
         const gameState = {
+            mode: 'freePlay',
             board,
-            randomLetter1,
-            randomLetter2
         };
-        localStorage.setItem('gridGameState', JSON.stringify(gameState));
+        const saveKey = currentGameMode === 'freePlay' ? FREE_PLAY_KEY : ARCADE_KEY;
+        localStorage.setItem(saveKey, JSON.stringify(gameState));
         alert('Game saved!');
     }
 
     // Load game state from local storage
     function loadGame() {
-        const gameState = JSON.parse(localStorage.getItem('gridGameState'));
+        const loadKey = currentGameMode === 'freePlay' ? FREE_PLAY_KEY : ARCADE_KEY;
+        const gameState = JSON.parse(localStorage.getItem(loadKey));
+        if (gameState.mode !== currentGameMode) {
+            alert('Error: Trying to load a game from a different mode!');
+            return
+        }
+        if(isBoardEmpty){//instance when you quit game and press continue, load empty board so its invalid
+            alert('No saved game found!')
+            window.location.href = 'mainpage.html'
+            return
+        }
         if (gameState) {
             board = gameState.board;
-            randomLetter1 = gameState.randomLetter1;
-            randomLetter2 = gameState.randomLetter2;
-            randomLetter1Element.textContent = `Letter 1: ${randomLetter1}`;
-            randomLetter2Element.textContent = `Letter 2: ${randomLetter2}`;
             printBoard();
             alert('Game loaded!');
-        } else {
-            alert('No saved game found!');
-        }
+        } 
     }
-
+    //if you press continue button, auto load game
+    if (referrer === 'freePlayGame'){
+        loadGame()
+        sessionStorage.removeItem('referrer');
+    }
     document.getElementById('saveGame').addEventListener('click', function () {
+        if (isBoardEmpty){
+            alert("Cannot save an empty board")
+        }else{
         saveGame();
         fadeOutAndNavigate('mainpage.html')
+        }
     });
     document.getElementById('loadGame').addEventListener('click', function () {
         loadGame();
+    });
+    document.getElementById('back').addEventListener('click', function () {
+        fadeOutAndNavigate('mainpage.html');
     });
     function fadeOutAndNavigate(targetUrl) {
         document.body.style.transition = "opacity 2s";
@@ -212,41 +209,66 @@
 
     </script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-        }
+     body {
+        font-family: Arial, sans-serif;
+    }
 
-        .container {
-            display: flex;
-            justify-content: space-between;
-        }
+    .container {
+        display: flex;
+        justify-content: space-between;
+    }
 
-        #menu {
-            width: 20%;
-        }
+    #menu {
+        width: 20%;
+    }
 
-        #gameBoard {
-            width: 75%;
-        }
+    #gameBoard {
+        width: 75%;
+    }
 
-        #grid {
-            display: grid;
-            gap: 2px;
-            margin-top: 20px;
-        }
+    #grid {
+        display: grid;
+        gap: 2px;
+        margin-top: 20px;
+    }
 
-        .grid-cell {
-            border: 1px solid #000;
-            width: 30px;
-            height: 30px;
-            text-align: center;
-            line-height: 30px;
-            font-size: 20px;
-        }
+    .grid-cell {
+        border: 1px solid #000;
+        width: 30px;
+        height: 30px;
+        text-align: center;
+        line-height: 30px;
+        font-size: 20px;
+    }
 
-        .grid-header {
-            font-weight: bold;
-        }
+    .grid-header {
+        font-weight: bold;
+    }
+
+    #placeLetterForm {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-group {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .form-group label {
+        flex: 1;
+    }
+
+    .form-group input {
+        flex: 2;
+    }
+
+    #placeLetterForm button {
+        margin-top: 10px;
+    }
+
 
     </style>
 </body>

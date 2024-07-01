@@ -135,7 +135,20 @@
         fadeOutAndNavigate('options.html');
     });
     document.getElementById('continueContainer').addEventListener('click', function () {
-        fadeOutAndNavigate('freeplay.html');
+        const selectedGameMode = localStorage.getItem('selectedGameMode');
+        if (selectedGameMode === 'arcade') {
+            // Arcade mode specific initialization
+            sessionStorage.setItem('referrer', 'arcadeGame');
+            fadeOutAndNavigate('game.html');
+
+        } else if (selectedGameMode === 'freeplay') {
+            // Free Play mode specific initialization
+            sessionStorage.setItem('referrer', 'freePlayGame');
+            fadeOutAndNavigate('freeplay.html')
+            
+        } else {
+            console.error('No game mode selected');
+        }
     });
 
     function fadeOutAndNavigate(targetUrl) {
