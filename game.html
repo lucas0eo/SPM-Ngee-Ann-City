@@ -14,6 +14,10 @@
     <div class="container">
         <div id="menu">
             <h2>Arcade Game Menu</h2>
+            <div id="gameInfo">
+                <p>Points: <span id="points">0</span></p>
+                <p>Coins: <span id="coins">0</span></p>
+            </div>
             <form id="placeLetterForm">
                 <label for="coordinate">Coordinate (e.g., A1):</label>
                 <input type="text" id="coordinate" name="coordinate">
@@ -46,6 +50,21 @@
         display: flex;
         justify-content: space-between;
     }
+    #gameInfo {
+            background-color: #f0f0f0;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+    #gameInfo p {
+            margin: 0;
+            font-weight: bold;
+        }
+
+    #gameInfo span {
+            margin-left: 5px;
+        }
+
 
     #menu {
         width: 20%;
@@ -102,22 +121,27 @@
     </style>
     <script>
     document.addEventListener('DOMContentLoaded', function () {
+    let score = 0;
+    let coins = 0;
     let boardSize = 20; // Example size, change as needed
     let board = Array.from({ length: boardSize }, () => Array(boardSize).fill(' '));
     const gridContainer = document.getElementById('grid');
     const placeLetterForm = document.getElementById('placeLetterForm');
     const randomLetter1Element = document.getElementById('randomLetter1');
     const randomLetter2Element = document.getElementById('randomLetter2');
+ 
     let referrer = sessionStorage.getItem('referrer');
-
+    let boardNotEmpty = false;
 
     // Define keys for saving game states
     const FREE_PLAY_KEY = 'freePlayGridGameState';
     const ARCADE_KEY = 'arcadeGridGameState';
     let currentGameMode = 'arcade';
-    // Function to get random letters 'O', 'I', 'C', '*', 'R'
+    // Get initial random letters for the game
+    let [randomLetter1, randomLetter2] = getRandomLetters();
+    // Function to get random letters ['O', 'I', 'C', '*', 'R']
     function getRandomLetters() {
-        const letters = ['O', 'I', 'C', '*', 'R'];
+        const letters = ['I','R'];
         const randomLetters = [];
         while (randomLetters.length < 2) {
             const letter = letters[Math.floor(Math.random() * letters.length)];
@@ -130,13 +154,11 @@
 
     // Function to update and display random letters
     function updateRandomLetters() {
-        const [randomLetter1, randomLetter2] = getRandomLetters();
+        [randomLetter1, randomLetter2] = getRandomLetters();
         randomLetter1Element.textContent = `Letter 1: ${randomLetter1}`;
         randomLetter2Element.textContent = `Letter 2: ${randomLetter2}`;
     }
 
-    // Get initial random letters for the game
-    const [randomLetter1, randomLetter2] = getRandomLetters();
 
     // Display initial random letters
     randomLetter1Element.textContent += randomLetter1;
@@ -186,71 +208,82 @@
         }
     }
 
-    function placeLetter(coord, letter) {
-        const [row, col] = convertCoord(coord);
-        if (row !== null && col !== null && board[row][col] === ' ') {
-            // Check if the letter matches one of the randomly selected letters
-            if ((letter === randomLetter1 || letter === randomLetter2)) {
-                // Check if at least one adjacent cell is occupied for subsequent placements
-                if(isBoardEmpty){
-                    console.log("NIHAO")
-                    board[row][col] = letter;
-                    updateRandomLetters();
-                    return true;
+    function placeLetter(coord, letter,score,coins) {
+        let result1 ={score,coins};
+    const [row, col] = convertCoord(coord);
+    if (row !== null && col !== null && board[row][col] === ' ') {
+        // Check if the letter matches one of the randomly selected letters
+        if (letter === randomLetter1 || letter === randomLetter2) {
+            // Check if at least one adjacent cell is occupied for subsequent placements
+            if (!boardNotEmpty || isAdjacentOccupied(row, col)) {
+                boardNotEmpty = true;
+                if (letter === "I"){
+                    const result = calculateIndustryScore(board, row, col, score, coins);
+                    score = result.score;
+                    coins = result.coins;
+                    result1 = result;
                 }
-                else if (isAdjacentOccupied) {
-                    console.log("NANI")
-                    board[row][col] = letter;
-                    updateRandomLetters();
-                    return true;
-                }
-            
+                board[row][col] = letter;
+                updateRandomLetters();
+                return {info:result1,bool:true};//returns scores and coins to be updated outside of function
+            } else {
+                alert("Letter must be placed adjacent to a previously placed letter.");
+            }
+        } else {
+            alert("Invalid letter selected.");
+        }
+    } else {
+        alert("Invalid coordinate or cell already occupied.");
+    }
+    return {bool:false};
+}
+
+
+function isBoardEmpty() {
+    for (let r = 0; r < boardSize; r++) {
+        for (let c = 0; c < boardSize; c++) {
+            if (board[r][c] !== ' ') {
+                return false; // Board is not empty if any cell is occupied
             }
         }
-        return false;
+    }
+    return true; // Board is empty if all cells are spaces
+}
+
+    //check is cells are occupied for adjacent placement checking
+    function isAdjacentOccupied(row, col) {
+        if (isBoardEmpty()) {
+        return false; // Skip adjacency check if board is empty
+        }
+    const directions = [
+        [-1, 0], [1, 0], [0, -1], [0, 1], // up, down, left, right
+        [-1, -1], [-1, 1], [1, -1], [1, 1] // diagonals
+    ];
+    for (const [dr, dc] of directions) {
+        const newRow = row + dr;
+        const newCol = col + dc;
+
+        if (newRow >= 0 && newRow < boardSize && newCol >= 0 && newCol < boardSize) {
+            if (board[newRow][newCol] !== ' ') {
+                return true;
+            }
+        }
     }
 
-    function isBoardEmpty() {
-        for (let r = 0; r < boardSize; r++) {
-            for (let c = 0; c < boardSize; c++) {
-                if (board[r][c] !== ' ') {
-                    return false; // Board is not empty if any cell is occupied
-                }
-            }
-        }
-        return true; // Board is empty if all cells are spaces
-    }
-
-    function isAdjacentOccupied() {
-        const directions = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, 1], [1, 1], [-1, -1], [1, -1]];
-        for (let r = 0; r < boardSize; r++) {
-            for (let c = 0; c < boardSize; c++) {
-                if (board[r][c] !== ' ') {
-                    for (const [dr, dc] of directions) {
-                        const newRow = r + dr;
-                        const newCol = c + dc;
-                        if (newRow >= 0 && newRow < boardSize && newCol >= 0 && newCol < boardSize) {
-                            if (board[newRow][newCol] !== ' ') {
-                                return true;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return false;
-    }
+    return false;
+}
 
     placeLetterForm.addEventListener('submit', function (e) {
         e.preventDefault();
         const coord = e.target.coordinate.value.trim();
         const letter = e.target.letter.value.trim().toUpperCase();
-
-        if (['O', 'I', 'C', '*', 'R'].includes(letter) && placeLetter(coord, letter)) {
+        const stuff = placeLetter(coord, letter,score,coins)
+        if (['O', 'I', 'C', '*', 'R'].includes(letter) && stuff.bool) {
+            score = stuff.info.score//updated score and coins from results from placeLetter calculate logic
+            coins = stuff.info.coins
+            console.log(score,coins)
             printBoard();
-        } else {
-            alert('Invalid input or cell cannot be placed without adjacent letter.');
-        }
+        } 
 
         e.target.coordinate.value = '';
         e.target.letter.value = '';
@@ -277,12 +310,12 @@
             alert('Error: Trying to load a game from a different mode!');
             return
         }
-        if(isBoardEmpty){//instance when you quit game and press continue, load empty board so its invalid
+        if(!isBoardEmpty){//instance when you quit game and press continue, load empty board so its invalid
             alert('No saved game found!')
             window.location.href = 'mainpage.html'
             return
         }
-        if (gameState) {
+        else if (gameState) {
             board = gameState.board;
             randomLetter1 = gameState.randomLetter1;
             randomLetter2 = gameState.randomLetter2;
@@ -298,12 +331,12 @@
     }
     //save game button
     document.getElementById('saveGame').addEventListener('click', function () {
-        if (isBoardEmpty){
-            alert("Cannot save an empty board")
-        }else{
+        // if (!isBoardEmpty){
+        //     alert("Cannot save an empty board")
+        // }else{
         saveGame();
         fadeOutAndNavigate('mainpage.html')
-        }
+        //}
     });
     //load game button logic
     document.getElementById('loadGame').addEventListener('click', function () {
@@ -319,6 +352,41 @@
             window.location.href = targetUrl;
         }, 2000); // Wait for the transition to complete
     }
+
+
+
+    function countAdjacent(board, row, col, type) {
+            const directions = [
+        [-1, 0], [1, 0], [0, -1], [0, 1], // up, down, left, right
+        [-1, -1], [-1, 1], [1, -1], [1, 1] // diagonals
+        ];
+            let count = 0;
+            for (const [dr, dc] of directions) {
+                const newRow = row + dr;
+                const newCol = col + dc;
+                if (newRow >= 0 && newRow < board.length && newCol >= 0 && newCol < board[0].length) {
+                    if (board[newRow][newCol] === type) {
+                        count++;
+                    }
+                }
+            }
+            return count;
+        }
+  
+    // Function to calculate score for Industry (I) building
+    function calculateIndustryScore(board, row, col,score,coins) {
+        count = countAdjacent(board, row, col, 'I');
+        if (count === 0){
+            score+=1
+        }
+        else{
+            score+=count
+        }
+        coins += countAdjacent(board, row, col, 'R');
+        return{score, coins};
+    }
+
+
 
     printBoard();
 });

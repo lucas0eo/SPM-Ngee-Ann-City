@@ -165,7 +165,7 @@
             alert('Error: Trying to load a game from a different mode!');
             return
         }
-        if(isBoardEmpty){//instance when you quit game and press continue, load empty board so its invalid
+        if(!isBoardEmpty){//instance when you quit game and press continue, load empty board so its invalid
             alert('No saved game found!')
             window.location.href = 'mainpage.html'
             return
@@ -182,8 +182,9 @@
         sessionStorage.removeItem('referrer');
     }
     document.getElementById('saveGame').addEventListener('click', function () {
-        if (isBoardEmpty){
+        if (!isBoardEmpty){
             alert("Cannot save an empty board")
+            return
         }else{
         saveGame();
         fadeOutAndNavigate('mainpage.html')
