@@ -86,6 +86,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+
     function placeLetter(coord, letter,score,coins) {
         let result1 ={score,coins};
     const [row, col] = convertCoord(coord);
@@ -103,6 +104,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
                 board[row][col] = letter;
                 updateRandomLetters();
+
+                // Check if arcade mode should end after placing this letter
+                if (currentGameMode == 'arcade'){
+                    if (coins == 0){
+                        alert(`Game Ended! Your score: ${score}`);
+                    }
+                }
                 return {info:result1,bool:true};//returns scores and coins to be updated outside of function
             } else {
                 alert("Letter must be placed adjacent to a previously placed letter.");
