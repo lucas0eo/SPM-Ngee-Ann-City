@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let referrer = sessionStorage.getItem('referrer');
     let boardNotEmpty = false;
-
+    let lostCounter = 0; //for counting of losses in freeplay
     const FREE_PLAY_KEY = 'freePlayGridGameState';
     const ARCADE_KEY = 'arcadeGridGameState';
     let currentGameMode = 'arcade';
@@ -112,6 +112,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     pointsElement.textContent = score; // Update points display
                     coinsElement.textContent = coins; // Update coins display
                     printBoard();
+
+                    // Check if arcade / free mode should end after placing this letter
+                    if (currentGameMode == 'arcade'){
+                        if (coins == 0){
+                            alert(`Game Ended! Your score: ${score}`);
+                        }
+                    } 
+
                     return { info: result, bool: true };
                 } else {
                     alert("Letter must be placed adjacent to a previously placed letter.");
@@ -134,6 +142,27 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
         return true;
+    }
+
+    function demolishBuilding(coord) {
+        const [row, col] = convertCoord(coord);
+        if (row !== null && col !== null && board[row][col] !== ' ') {
+            if (coins > 1) {
+                const building = board[row][col];
+                board[row][col] = ' ';
+                coins -= 1; // Deduct 1 coin for demolition
+
+                pointsElement.textContent = score; // Update points display
+                coinsElement.textContent = coins; // Update coins display
+                printBoard();
+
+                alert("Building demolished.");
+            } else {
+                alert("Not enough coins to demolish the building.");
+            }
+        } else {
+            alert("No building detected at the given coordinates.");
+        }
     }
 
     function isAdjacentOccupied(row, col) {
@@ -236,6 +265,12 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         coordInput.value = '';
         letterInput.value = '';
+    });
+
+    demolishBuildingForm.addEventListener('submit', function (event) {
+        event.preventDefault();
+        const coordInput = document.getElementById('demolishCoord').value;
+        demolishBuilding(coordInput);
     });
 
     const saveGameButton = document.getElementById('saveGame');
