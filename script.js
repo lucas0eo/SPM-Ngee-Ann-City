@@ -9,16 +9,19 @@ document.addEventListener('DOMContentLoaded', function () {
     const randomLetter2Element = document.getElementById('randomLetter2');
     const pointsElement = document.getElementById('points');
     const coinsElement = document.getElementById('coins');
-
+ 
+    let referrer = sessionStorage.getItem('referrer');
     let boardNotEmpty = false;
+
+    // Define keys for saving game states
     const FREE_PLAY_KEY = 'freePlayGridGameState';
     const ARCADE_KEY = 'arcadeGridGameState';
     let currentGameMode = 'arcade';
-
+    // Get initial random letters for the game
     let [randomLetter1, randomLetter2] = getRandomLetters();
-
+    // Function to get random letters ['O', 'I', 'C', '*', 'R']
     function getRandomLetters() {
-        const letters = ['R', 'I', 'C', 'O', '*'];
+        const letters = ['I','R'];
         const randomLetters = [];
         while (randomLetters.length < 2) {
             const letter = letters[Math.floor(Math.random() * letters.length)];
@@ -29,12 +32,15 @@ document.addEventListener('DOMContentLoaded', function () {
         return randomLetters;
     }
 
+
+    // Function to update and display random letters
     function updateRandomLetters() {
         [randomLetter1, randomLetter2] = getRandomLetters();
         randomLetter1Element.textContent = `Letter 1: ${randomLetter1}`;
         randomLetter2Element.textContent = `Letter 2: ${randomLetter2}`;
     }
 
+    // Display initial random letters
     randomLetter1Element.textContent += randomLetter1;
     randomLetter2Element.textContent += randomLetter2;
 
@@ -81,6 +87,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return [null, null];
         }
     }
+
 
     function placeLetter(coord, letter) {
         let result = { score, coins };
@@ -239,3 +246,107 @@ document.addEventListener('DOMContentLoaded', function () {
 
     printBoard();
 });
+
+        // Save game state to local storage
+        function saveGame() {
+        const gameState = {
+            mode: 'arcade',
+            board,
+            randomLetter1,
+            randomLetter2
+        };
+        const saveKey = currentGameMode === 'arcade' ? FREE_PLAY_KEY : ARCADE_KEY;
+        localStorage.setItem(saveKey, JSON.stringify(gameState));
+        alert('Game saved!');
+    }
+
+    // Load game state from local storage
+    function loadGame() {
+        const loadKey = currentGameMode === 'arcade' ? FREE_PLAY_KEY : ARCADE_KEY;//key for arcade, checks if loaded game is arcade mode
+        const gameState = JSON.parse(localStorage.getItem(loadKey));
+        if (gameState.mode !== currentGameMode) {
+            alert('Error: Trying to load a game from a different mode!');
+            return
+        }
+        if(!isBoardEmpty){//instance when you quit game and press continue, load empty board so its invalid
+            alert('No saved game found!')
+            window.location.href = 'mainpage.html'
+            return
+        }
+        else if (gameState) {
+            board = gameState.board;
+            randomLetter1 = gameState.randomLetter1;
+            randomLetter2 = gameState.randomLetter2;
+            randomLetter1Element.textContent = `Letter 1: ${randomLetter1}`;
+            randomLetter2Element.textContent = `Letter 2: ${randomLetter2}`;
+            printBoard();
+            alert('Game loaded!');
+        } 
+    }
+    if (referrer === 'arcadeGame'){
+        loadGame()
+        sessionStorage.removeItem('referrer');
+    }
+    //save game button
+    document.getElementById('saveGame').addEventListener('click', function () {
+        // if (!isBoardEmpty){
+        //     alert("Cannot save an empty board")
+        // }else{
+        saveGame();
+        fadeOutAndNavigate('mainpage.html')
+        //}
+    });
+    //load game button logic
+    document.getElementById('loadGame').addEventListener('click', function () {
+        loadGame();
+    });
+    document.getElementById('back').addEventListener('click', function () {
+        fadeOutAndNavigate('mainpage.html')
+    });
+    function fadeOutAndNavigate(targetUrl) {
+        document.body.style.transition = "opacity 2s";
+        document.body.style.opacity = "0";
+        setTimeout(function () {
+            window.location.href = targetUrl;
+        }, 2000); // Wait for the transition to complete
+    }
+
+
+
+    function countAdjacent(board, row, col, type) {
+            const directions = [
+        [-1, 0], [1, 0], [0, -1], [0, 1], // up, down, left, right
+        [-1, -1], [-1, 1], [1, -1], [1, 1] // diagonals
+        ];
+            let count = 0;
+            for (const [dr, dc] of directions) {
+                const newRow = row + dr;
+                const newCol = col + dc;
+                if (newRow >= 0 && newRow < board.length && newCol >= 0 && newCol < board[0].length) {
+                    if (board[newRow][newCol] === type) {
+                        count++;
+                    }
+                }
+            }
+            return count;
+        }
+  
+    // Function to calculate score for Industry (I) building
+    function calculateIndustryScore(board, row, col,score,coins) {
+        count = countAdjacent(board, row, col, 'I');
+        if (count === 0){
+            score+=1
+        }
+        else{
+            score+=count
+        }
+        coins += countAdjacent(board, row, col, 'R');
+        return{score, coins};
+    }
+
+
+
+    printBoard();
+});
+
+
