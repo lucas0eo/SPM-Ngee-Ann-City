@@ -1,12 +1,14 @@
 document.addEventListener('DOMContentLoaded', function () {
     let score = 0;
-    let coins = 0;
-    let boardSize = 20; // Example size, change as needed
+    let coins = 16;
+    let boardSize = 20;
     let board = Array.from({ length: boardSize }, () => Array(boardSize).fill(' '));
     const gridContainer = document.getElementById('grid');
     const placeLetterForm = document.getElementById('placeLetterForm');
     const randomLetter1Element = document.getElementById('randomLetter1');
     const randomLetter2Element = document.getElementById('randomLetter2');
+    const pointsElement = document.getElementById('points');
+    const coinsElement = document.getElementById('coins');
  
     let referrer = sessionStorage.getItem('referrer');
     let boardNotEmpty = false;
@@ -30,13 +32,13 @@ document.addEventListener('DOMContentLoaded', function () {
         return randomLetters;
     }
 
+
     // Function to update and display random letters
     function updateRandomLetters() {
         [randomLetter1, randomLetter2] = getRandomLetters();
         randomLetter1Element.textContent = `Letter 1: ${randomLetter1}`;
         randomLetter2Element.textContent = `Letter 2: ${randomLetter2}`;
     }
-
 
     // Display initial random letters
     randomLetter1Element.textContent += randomLetter1;
@@ -87,93 +89,163 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
 
-    function placeLetter(coord, letter,score,coins) {
-        let result1 ={score,coins};
-    const [row, col] = convertCoord(coord);
-    if (row !== null && col !== null && board[row][col] === ' ') {
-        // Check if the letter matches one of the randomly selected letters
-        if (letter === randomLetter1 || letter === randomLetter2) {
-            // Check if at least one adjacent cell is occupied for subsequent placements
-            if (!boardNotEmpty || isAdjacentOccupied(row, col)) {
-                boardNotEmpty = true;
-                if (letter === "I"){
-                    const result = calculateIndustryScore(board, row, col, score, coins);
-                    score = result.score;
-                    coins = result.coins;
-                    result1 = result;
-                }
-                board[row][col] = letter;
-                updateRandomLetters();
-
-                // Check if arcade mode should end after placing this letter
-                if (currentGameMode == 'arcade'){
-                    if (coins == 0){
-                        alert(`Game Ended! Your score: ${score}`);
+    function placeLetter(coord, letter) {
+        let result = { score, coins };
+        const [row, col] = convertCoord(coord);
+        if (row !== null && col !== null && board[row][col] === ' ') {
+            if (letter === randomLetter1 || letter === randomLetter2) {
+                if (!boardNotEmpty || isAdjacentOccupied(row, col)) {
+                    boardNotEmpty = true;
+                    coins--; // Deduct 1 coin per construction
+                    let prevScore = score;
+                    if (letter === "R") {
+                        result = calculateResidentialScore(board, row, col, score, coins);
+                    } else if (letter === "I") {
+                        result = calculateIndustryScore(board, row, col, score, coins);
+                    } else if (letter === "C") {
+                        result = calculateCommercialScore(board, row, col, score, coins);
+                    } else if (letter === "O") {
+                        result = calculateParkScore(board, row, col, score, coins);
+                    } else if (letter === "*") {
+                        result = calculateRoadScore(board, row, col, score, coins);
                     }
+                    score = result.score; // Update score with result.score
+                    coins = result.coins;
+                    board[row][col] = letter;
+                    updateRandomLetters();
+                    pointsElement.textContent = score; // Update points display
+                    coinsElement.textContent = coins; // Update coins display
+                    printBoard();
+                    return { info: result, bool: true };
+                } else {
+                    alert("Letter must be placed adjacent to a previously placed letter.");
                 }
-                return {info:result1,bool:true};//returns scores and coins to be updated outside of function
             } else {
-                alert("Letter must be placed adjacent to a previously placed letter.");
+                alert("Invalid letter selected.");
             }
         } else {
-            alert("Invalid letter selected.");
+            alert("Invalid coordinate or cell already occupied.");
         }
-    } else {
-        alert("Invalid coordinate or cell already occupied.");
+        return { bool: false };
     }
-    return {bool:false};
-}
 
-
-function isBoardEmpty() {
-    for (let r = 0; r < boardSize; r++) {
-        for (let c = 0; c < boardSize; c++) {
-            if (board[r][c] !== ' ') {
-                return false; // Board is not empty if any cell is occupied
+    function isBoardEmpty() {
+        for (let r = 0; r < boardSize; r++) {
+            for (let c = 0; c < boardSize; c++) {
+                if (board[r][c] !== ' ') {
+                    return false;
+                }
             }
         }
+        return true;
     }
-    return true; // Board is empty if all cells are spaces
-}
 
-    //check is cells are occupied for adjacent placement checking
     function isAdjacentOccupied(row, col) {
         if (isBoardEmpty()) {
-        return false; // Skip adjacency check if board is empty
+            return false;
         }
-    const directions = [
-        [-1, 0], [1, 0], [0, -1], [0, 1], // up, down, left, right
-        [-1, -1], [-1, 1], [1, -1], [1, 1] // diagonals
-    ];
-    for (const [dr, dc] of directions) {
-        const newRow = row + dr;
-        const newCol = col + dc;
-
-        if (newRow >= 0 && newRow < boardSize && newCol >= 0 && newCol < boardSize) {
-            if (board[newRow][newCol] !== ' ') {
-                return true;
+        const directions = [
+            [-1, 0], [1, 0], [0, -1], [0, 1],
+            [-1, -1], [-1, 1], [1, -1], [1, 1]
+        ];
+        for (const [dr, dc] of directions) {
+            const newRow = row + dr;
+            const newCol = col + dc;
+            if (newRow >= 0 && newRow < boardSize && newCol >= 0 && newCol < boardSize) {
+                if (board[newRow][newCol] !== ' ') {
+                    return true;
+                }
             }
         }
+        return false;
     }
 
-    return false;
-}
+    function countAdjacent(board, row, col, type) {
+        const directions = [
+            [-1, 0], [1, 0], [0, -1], [0, 1],
+            [-1, -1], [-1, 1], [1, -1], [1, 1]
+        ];
+        let count = 0;
+        for (const [dr, dc] of directions) {
+            const newRow = row + dr;
+            const newCol = col + dc;
+            if (newRow >= 0 && newRow < board.length && newCol >= 0 && newCol < board[0].length) {
+                if (board[newRow][newCol] === type) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
 
-    placeLetterForm.addEventListener('submit', function (e) {
-        e.preventDefault();
-        const coord = e.target.coordinate.value.trim();
-        const letter = e.target.letter.value.trim().toUpperCase();
-        const stuff = placeLetter(coord, letter,score,coins)
-        if (['O', 'I', 'C', '*', 'R'].includes(letter) && stuff.bool) {
-            score = stuff.info.score//updated score and coins from results from placeLetter calculate logic
-            coins = stuff.info.coins
-            console.log(score,coins)
+    function calculateResidentialScore(board, row, col, score, coins) {
+        const industryCount = countAdjacent(board, row, col, 'I');
+        if (industryCount > 0) {
+            score += 1;
+        } else {
+            const residentialCount = countAdjacent(board, row, col, 'R');
+            const commercialCount = countAdjacent(board, row, col, 'C');
+            const parkCount = countAdjacent(board, row, col, 'O');
+            score += residentialCount + commercialCount + (2 * parkCount);
+        }
+        return { score, coins };
+    }
+
+    function calculateIndustryScore(board, row, col, score, coins) {
+        const industryCount = countAdjacent(board, row, col, 'I');
+        score += industryCount === 0 ? 1 : industryCount;
+        coins += countAdjacent(board, row, col, 'R');
+        return { score, coins };
+    }
+
+    function calculateCommercialScore(board, row, col, score, coins) {
+        const commercialCount = countAdjacent(board, row, col, 'C');
+        score += commercialCount;
+        coins += countAdjacent(board, row, col, 'R');
+        return { score, coins };
+    }
+
+    function calculateParkScore(board, row, col, score, coins) {
+        score += countAdjacent(board, row, col, 'O');
+        return { score, coins };
+    }
+
+    function calculateRoadScore(board, row, col, score, coins) {
+        let connectedCount = 1;
+        for (let i = col + 1; i < boardSize; i++) {
+            if (board[row][i] === '*') {
+                connectedCount++;
+            } else {
+                break;
+            }
+        }
+        for (let i = col - 1; i >= 0; i--) {
+            if (board[row][i] === '*') {
+                connectedCount++;
+            } else {
+                break;
+            }
+        }
+        score += connectedCount;
+        return { score, coins };
+    }
+
+    placeLetterForm.addEventListener('submit', function (event) {
+        event.preventDefault();
+        const coordInput = document.getElementById('coordinate').value.trim();
+        const letterInput = document.getElementById('letter').value.trim().toUpperCase();
+        const result = placeLetter(coordInput, letterInput);
+        if (result.bool) {
+            score = result.info.score;
+            coins = result.info.coins;
+            pointsElement.textContent = score; // Update points display
+            coinsElement.textContent = coins; // Update coins display
             printBoard();
-        } 
-
-        e.target.coordinate.value = '';
-        e.target.letter.value = '';
+        }
     });
+
+    printBoard();
+});
 
         // Save game state to local storage
         function saveGame() {
