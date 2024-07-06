@@ -7,9 +7,6 @@
     <title>Grid Game</title>
     <link rel="stylesheet" href="styles.css">
 </head>
-<style>
-/* Add your styles here */
-</style>
 <body>
     <div class="container">
         <div id="menu">
@@ -38,305 +35,298 @@
         </div>
     </div>
     <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        let boardSize = 5; 
-        let board = Array.from({ length: boardSize }, () => Array(boardSize).fill(' '));
-        let gridContainer = document.getElementById('grid');
-        let placeLetterForm = document.getElementById('placeLetterForm');
-        let profitElement = document.getElementById('profit');
-        let upkeepElement = document.getElementById('upkeep');
-        let turnsExceededElement = document.getElementById('turnsExceeded');
-        let referrer = sessionStorage.getItem('referrer');
-
-        // Define keys for saving game states
-        const FREE_PLAY_KEY = 'freePlayGridGameState';
-        const ARCADE_KEY = 'arcadeGridGameState';
-        let currentGameMode = 'freePlay';
-
-        // Profit and upkeep tracking
-        let profit = 0;
-        let upkeep = 0;
-        let turnsExceeded = 0;
-
-        function printBoard() {
-            gridContainer.innerHTML = '';
-            gridContainer.style.gridTemplateColumns = `repeat(${boardSize + 1}, 30px)`;
-
-            const columnHeaders = document.createElement('div');
-            columnHeaders.classList.add('grid-header');
-            columnHeaders.textContent = ' ';
-            gridContainer.appendChild(columnHeaders);
-
-            for (let i = 0; i < boardSize; i++) {
-                const headerCell = document.createElement('div');
-                headerCell.classList.add('grid-header');
-                headerCell.textContent = i + 1;
-                gridContainer.appendChild(headerCell);
-            }
-
-            for (let r = 0; r < boardSize; r++) {
-                const rowHeader = document.createElement('div');
-                rowHeader.classList.add('grid-header');
-                rowHeader.textContent = String.fromCharCode(65 + r);
-                gridContainer.appendChild(rowHeader);
-
-                for (let c = 0; c < boardSize; c++) {
-                    const cell = document.createElement('div');
-                    cell.classList.add('grid-cell');
-                    cell.textContent = board[r][c];
-                    gridContainer.appendChild(cell);
+        document.addEventListener('DOMContentLoaded', function () {
+            let boardSize = 5; 
+            let board = Array.from({ length: boardSize }, () => Array(boardSize).fill(' '));
+            let gridContainer = document.getElementById('grid');
+            let placeLetterForm = document.getElementById('placeLetterForm');
+            let profitElement = document.getElementById('profit');
+            let upkeepElement = document.getElementById('upkeep');
+            let turnsExceededElement = document.getElementById('turnsExceeded');
+            let referrer = sessionStorage.getItem('referrer');
+    
+            // Define keys for saving game states
+            const FREE_PLAY_KEY = 'freePlayGridGameState';
+            const ARCADE_KEY = 'arcadeGridGameState';
+            let currentGameMode = 'freePlay';
+    
+            // Profit and upkeep tracking
+            let profit = 0;
+            let upkeep = 0;
+            let turnsExceeded = 0;
+    
+            function printBoard() {
+                gridContainer.innerHTML = '';
+                gridContainer.style.gridTemplateColumns = `repeat(${boardSize + 1}, 30px)`;
+    
+                const columnHeaders = document.createElement('div');
+                columnHeaders.classList.add('grid-header');
+                columnHeaders.textContent = ' ';
+                gridContainer.appendChild(columnHeaders);
+    
+                for (let i = 0; i < boardSize; i++) {
+                    const headerCell = document.createElement('div');
+                    headerCell.classList.add('grid-header');
+                    headerCell.textContent = i + 1;
+                    gridContainer.appendChild(headerCell);
                 }
-            }
-        }
-
-        function convertCoord(coord) {
-            const regex = /^([A-Za-z])(\d+)$/;
-            const match = coord.match(regex);
-            if (!match) return [null, null];
-            const row = match[1].toUpperCase().charCodeAt(0) - 65;
-            const col = parseInt(match[2], 10) - 1;
-            if (row >= 0 && row < boardSize && col >= 0 && col < boardSize) {
-                return [row, col];
-            } else {
-                return [null, null];
-            }
-        }
-
-        function expandBoard() {
-            // Add 5 columns to each row
-            board.forEach(row => {
-                row.push(...Array(5).fill(' '));
-            });
-            // Add 5 new rows
-            for (let i = 0; i < 5; i++) {
-                board.push(Array(board[0].length).fill(' '));
-            }
-            // Update boardSize to reflect new size
-            boardSize += 5;
-        }
-
-        function placeLetter(coord, letter) {
-            const [row, col] = convertCoord(coord);
-            if (row !== null && col !== null && board[row][col] === ' ') {
-                if (row === board.length - 1 || col === board[0].length - 1) {
-                    expandBoard();
-                }
-                board[row][col] = letter;
-                updateProfitAndUpkeep();
-                return true;
-            }
-            return false;
-        }
-
-        function updateProfitAndUpkeep() {
-            profit = 0;
-            upkeep = 0;
-            let residentialClusters = 0;
-            let connectedComponents = [];
-
-            for (let r = 0; r < boardSize; r++) {
-                for (let c = 0; c < boardSize; c++) {
-                    let building = board[r][c];
-                    switch (building) {
-                        case 'R':
-                            profit += 1;
-                            if (isCluster(r, c, 'R', connectedComponents)) {
-                                residentialClusters++;
-                            }
-                            break;
-                        case 'I':
-                            profit += 2;
-                            upkeep += 1;
-                            break;
-                        case 'C':
-                            profit += 3;
-                            upkeep += 2;
-                            break;
-                        case 'O':
-                            upkeep += 1;
-                            break;
-                        case '*':
-                            if (!isConnected(r, c, connectedComponents)) {
-                                upkeep += 1;
-                            }
-                            break;
+    
+                for (let r = 0; r < boardSize; r++) {
+                    const rowHeader = document.createElement('div');
+                    rowHeader.classList.add('grid-header');
+                    rowHeader.textContent = String.fromCharCode(65 + r);
+                    gridContainer.appendChild(rowHeader);
+    
+                    for (let c = 0; c < boardSize; c++) {
+                        const cell = document.createElement('div');
+                        cell.classList.add('grid-cell');
+                        cell.textContent = board[r][c];
+                        gridContainer.appendChild(cell);
                     }
                 }
             }
-
-            upkeep += residentialClusters;
-            profitElement.textContent = `Profit: ${profit}`;
-            upkeepElement.textContent = `Upkeep: ${upkeep}`;
-
-            if (upkeep > profit) {
-                turnsExceeded++;
-            } else {
-                turnsExceeded = 0;
+    
+            function convertCoord(coord) {
+                const regex = /^([A-Za-z])(\d+)$/;
+                const match = coord.match(regex);
+                if (!match) return [null, null];
+                const row = match[1].toUpperCase().charCodeAt(0) - 65;
+                const col = parseInt(match[2], 10) - 1;
+                if (row >= 0 && row < boardSize && col >= 0 && col < boardSize) {
+                    return [row, col];
+                } else {
+                    return [null, null];
+                }
             }
-
-            turnsExceededElement.textContent = `Turns upkeep exceeded profit: ${turnsExceeded}`;
-
-            if (turnsExceeded >= 20) {
-                alert("Game Over: Upkeep has exceeded profit for 20 turns!");
-                resetGame();
+    
+            function expandBoard() {
+                // Add 5 columns to each row
+                board.forEach(row => {
+                    row.push(...Array(5).fill(' '));
+                });
+                // Add 5 new rows
+                for (let i = 0; i < 5; i++) {
+                    board.push(Array(board[0].length).fill(' '));
+                }
+                // Update boardSize to reflect new size
+                boardSize += 5;
             }
-        }
-
-        function isCluster(row, col, type, connectedComponents) {
-            // Check if the given (row, col) is part of a cluster of the same type
-            // Use BFS or DFS to find the cluster
-            const stack = [[row, col]];
-            const visited = new Set();
-            let isPartOfCluster = false;
-
-            while (stack.length > 0) {
-                const [r, c] = stack.pop();
-                if (visited.has(`${r},${c}`)) continue;
-                visited.add(`${r},${c}`);
-
-                if (board[r][c] === type) {
-                    isPartOfCluster = true;
-                    const neighbors = getNeighbors(r, c);
-                    for (const [nr, nc] of neighbors) {
-                        if (board[nr][nc] === type && !visited.has(`${nr},${nc}`)) {
-                            stack.push([nr, nc]);
+    
+            function placeLetter(coord, letter) {
+                const [row, col] = convertCoord(coord);
+                if (row !== null && col !== null && board[row][col] === ' ') {
+                    if (row === board.length - 1 || col === board[0].length - 1) {
+                        expandBoard();
+                    }
+                    board[row][col] = letter;
+                    updateProfitAndUpkeep();
+                    return true;
+                }
+                return false;
+            }
+    
+            function updateProfitAndUpkeep() {
+                profit = 0;
+                upkeep = 0;
+                let residentialClusters = new Set();
+                let roadComponents = new Set();
+    
+                for (let r = 0; r < boardSize; r++) {
+                    for (let c = 0; c < boardSize; c++) {
+                        let building = board[r][c];
+                        switch (building) {
+                            case 'R':
+                                profit += 1;
+                                if (isCluster(r, c, 'R', residentialClusters)) {
+                                    residentialClusters.add(`${r},${c}`);
+                                }
+                                break;
+                            case 'I':
+                                profit += 2;
+                                upkeep += 1;
+                                break;
+                            case 'C':
+                                profit += 3;
+                                upkeep += 2;
+                                break;
+                            case 'O':
+                                upkeep += 1;
+                                break;
+                            case '*':
+                                if (!isConnected(r, c, roadComponents)) {
+                                    upkeep += 1;
+                                }
+                                break;
                         }
                     }
                 }
-            }
-
-            if (isPartOfCluster) {
-                connectedComponents.push([...visited]);
-            }
-
-            return isPartOfCluster;
-        }
-
-        function getNeighbors(row, col) {
-            const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
-            return directions.map(([dr, dc]) => [row + dr, col + dc])
-                             .filter(([nr, nc]) => nr >= 0 && nr < boardSize && nc >= 0 && nc < boardSize);
-        }
-
-        function isConnected(row, col, connectedComponents) {
-            // Check if the given (row, col) road is connected to any other road segment
-            for (const component of connectedComponents) {
-                if (component.has(`${row},${col}`)) {
-                    return true;
+    
+                upkeep += residentialClusters.size > 0 ? 1 : 0;
+                profitElement.textContent = `Profit: ${profit}`;
+                upkeepElement.textContent = `Upkeep: ${upkeep}`;
+    
+                if (upkeep > profit) {
+                    turnsExceeded++;
+                } else {
+                    turnsExceeded = 0;
+                }
+    
+                turnsExceededElement.textContent = `Turns upkeep exceeded profit: ${turnsExceeded}`;
+    
+                if (turnsExceeded >= 20) {
+                    alert("Game Over: Upkeep has exceeded profit for 20 turns!");
+                    resetGame();
                 }
             }
-            return false;
-        }
-
-        function resetGame() {
-            board = Array.from({ length: 5 }, () => Array(5).fill(' '));
-            boardSize = 5;
-            profit = 0;
-            upkeep = 0;
-            turnsExceeded = 0;
-            printBoard();
-            updateProfitAndUpkeep();
-        }
-
-        placeLetterForm.addEventListener('submit', function (e) {
-            e.preventDefault();
-            const coord = e.target.coordinate.value.trim();
-            const letter = e.target.letter.value.trim().toUpperCase();
-
-            if (['O', 'I', 'C', '*', 'R'].includes(letter) && placeLetter(coord, letter)) {
-                printBoard();
-            } else {
-                alert('Invalid input or cell cannot be placed.');
-            }
-
-            e.target.coordinate.value = '';
-            e.target.letter.value = '';
-        });
-
-        function saveGame() {
-            const gameState = {
-                mode: 'freePlay',
-                board,
-                boardSize,
-                profit,
-                upkeep,
-                turnsExceeded,
-            };
-            const saveKey = currentGameMode === 'freePlay' ? FREE_PLAY_KEY : ARCADE_KEY;
-            localStorage.setItem(saveKey, JSON.stringify(gameState));
-            alert('Game saved!');
-        }
-
-        function loadGame() {
-            const loadKey = currentGameMode === 'freePlay' ? FREE_PLAY_KEY : ARCADE_KEY;
-            const gameState = JSON.parse(localStorage.getItem(loadKey));
-            if (gameState.mode !== currentGameMode) {
-                alert('Error: Trying to load a game from a different mode!');
-                return;
-            }
-            if (isBoardEmpty) {
-                alert('No saved game found!');
-                window.location.href = 'mainpage.html';
-                return;
-            }
-            if (gameState) {
-                board = gameState.board;
-                boardSize = gameState.boardSize;
-                profit = gameState.profit;
-                upkeep = gameState.upkeep;
-                turnsExceeded = gameState.turnsExceeded;
-                printBoard();
-                updateProfitAndUpkeep();
-                alert('Game loaded!');
-            }
-        }
-
-        function isBoardEmpty() {
-            for (let r = 0; r < boardSize; r++) {
-                for (let c = 0; c < boardSize; c++) {
-                    if (board[r][c] !== ' ') {
-                        return false;
+    
+            function isCluster(row, col, type, residentialClusters) {
+                const directions = [
+                    [-1, 0], [1, 0], [0, -1], [0, 1], 
+                    [-1, -1], [1, 1], [-1, 1], [1, -1]
+                ];
+                for (const [dr, dc] of directions) {
+                    const nr = row + dr;
+                    const nc = col + dc;
+                    if (nr >= 0 && nr < boardSize && nc >= 0 && nc < boardSize) {
+                        if (board[nr][nc] === type) {
+                            residentialClusters.add(`${nr},${nc}`);
+                            return true;
+                        }
                     }
                 }
+                return false;
             }
-            return true;
-        }
-
-        if (referrer === 'freePlayGame') {
-            loadGame();
-            sessionStorage.removeItem('referrer');
-        }
-
-        document.getElementById('saveGame').addEventListener('click', function () {
-            if (isBoardEmpty()) {
-                alert("Cannot save an empty board");
-                return;
-            } else {
-                saveGame();
+    
+            function isConnected(row, col, roadComponents) {
+                const directions = [
+                    [-1, 0], [1, 0], [0, -1], [0, 1]
+                ];
+                for (const [dr, dc] of directions) {
+                    const nr = row + dr;
+                    const nc = col + dc;
+                    if (nr >= 0 && nr < boardSize && nc >= 0 && nc < boardSize) {
+                        if (board[nr][nc] !== ' ' && (board[nr][nc] === '*' || isBuilding(board[nr][nc]))) {
+                            roadComponents.add(`${nr},${nc}`);
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+    
+            function isBuilding(cell) {
+                return ['R', 'I', 'C', 'O'].includes(cell);
+            }
+    
+            function resetGame() {
+                board = Array.from({ length: 5 }, () => Array(5).fill(' '));
+                boardSize = 5;
+                profit = 0;
+                upkeep = 0;
+                turnsExceeded = 0;
+                printBoard();
+                updateProfitAndUpkeep();
+            }
+    
+            placeLetterForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const coord = e.target.coordinate.value.trim();
+                const letter = e.target.letter.value.trim().toUpperCase();
+    
+                if (['O', 'I', 'C', '*', 'R'].includes(letter) && placeLetter(coord, letter)) {
+                    printBoard();
+                } else {
+                    alert('Invalid input or cell cannot be placed.');
+                }
+    
+                e.target.coordinate.value = '';
+                e.target.letter.value = '';
+            });
+    
+            function saveGame() {
+                const gameState = {
+                    mode: 'freePlay',
+                    board,
+                    boardSize,
+                    profit,
+                    upkeep,
+                    turnsExceeded,
+                };
+                const saveKey = currentGameMode === 'freePlay' ? FREE_PLAY_KEY : ARCADE_KEY;
+                localStorage.setItem(saveKey, JSON.stringify(gameState));
+                alert('Game saved!');
+            }
+    
+            function loadGame() {
+                const loadKey = currentGameMode === 'freePlay' ? FREE_PLAY_KEY : ARCADE_KEY;
+                const gameState = JSON.parse(localStorage.getItem(loadKey));
+                if (gameState.mode !== currentGameMode) {
+                    alert('Error: Trying to load a game from a different mode!');
+                    return;
+                }
+                if (isBoardEmpty()) {
+                    alert('No saved game found!');
+                    window.location.href = 'mainpage.html';
+                    return;
+                }
+                if (gameState) {
+                    board = gameState.board;
+                    boardSize = gameState.boardSize;
+                    profit = gameState.profit;
+                    upkeep = gameState.upkeep;
+                    turnsExceeded = gameState.turnsExceeded;
+                    printBoard();
+                    updateProfitAndUpkeep();
+                    alert('Game loaded!');
+                }
+            }
+    
+            function isBoardEmpty() {
+                for (let r = 0; r < boardSize; r++) {
+                    for (let c = 0; c < boardSize; c++) {
+                        if (board[r][c] !== ' ') {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+    
+            if (referrer === 'freePlayGame') {
+                loadGame();
+                sessionStorage.removeItem('referrer');
+            }
+    
+            document.getElementById('saveGame').addEventListener('click', function () {
+                if (isBoardEmpty()) {
+                    alert("Cannot save an empty board");
+                    return;
+                } else {
+                    saveGame();
+                    fadeOutAndNavigate('mainpage.html');
+                }
+            });
+    
+            document.getElementById('loadGame').addEventListener('click', function () {
+                loadGame();
+            });
+    
+            document.getElementById('back').addEventListener('click', function () {
                 fadeOutAndNavigate('mainpage.html');
+            });
+    
+            function fadeOutAndNavigate(targetUrl) {
+                document.body.style.transition = "opacity 2s";
+                document.body.style.opacity = "0";
+                setTimeout(function () {
+                    window.location.href = targetUrl;
+                }, 2000);
             }
+    
+            printBoard();
+            updateProfitAndUpkeep();
         });
-
-        document.getElementById('loadGame').addEventListener('click', function () {
-            loadGame();
-        });
-
-        document.getElementById('back').addEventListener('click', function () {
-            fadeOutAndNavigate('mainpage.html');
-        });
-
-        function fadeOutAndNavigate(targetUrl) {
-            document.body.style.transition = "opacity 2s";
-            document.body.style.opacity = "0";
-            setTimeout(function () {
-                window.location.href = targetUrl;
-            }, 2000);
-        }
-
-        printBoard();
-        updateProfitAndUpkeep();
-    });
-    </script>
+        </script>
     <style>
      body {
         font-family: Arial, sans-serif;
