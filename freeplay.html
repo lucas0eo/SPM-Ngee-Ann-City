@@ -165,6 +165,7 @@
         const gameState = {
             mode: 'freePlay',
             board,
+            boardSize,
         };
         const saveKey = currentGameMode === 'freePlay' ? FREE_PLAY_KEY : ARCADE_KEY;
         localStorage.setItem(saveKey, JSON.stringify(gameState));
@@ -186,6 +187,7 @@
         }
         if (gameState) {
             board = gameState.board;
+            boardSize = gameState.boardSize;
             printBoard();
             alert('Game loaded!');
         } 
