@@ -12,7 +12,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let referrer = sessionStorage.getItem('referrer');
     let boardNotEmpty = false;
-    let lostCounter = 0; //for counting of losses in freeplay
     const FREE_PLAY_KEY = 'freePlayGridGameState';
     const ARCADE_KEY = 'arcadeGridGameState';
     let currentGameMode = 'arcade';
@@ -268,7 +267,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const coord = document.getElementById('coordinate').value.trim();
         const letter = document.getElementById('letter').value.trim();
     
-        const result = placeLetter(coord, letter);-7
+        const result = placeLetter(coord, letter);
         if (result.bool) {
             sessionStorage.setItem(FREE_PLAY_KEY, JSON.stringify({
                 score,
