@@ -91,15 +91,29 @@
             return [null, null];
         }
     }
-
+    function expandBoard() {
+            // Add 5 columns to each row
+            board.forEach(row => {
+                row.push(...Array(5).fill(' '));
+            });
+            // Add 5 new rows
+            for (let i = 0; i < 5; i++) {
+                board.push(Array(board[0].length).fill(' '));
+            }
+            // Update boardSize to reflect new size
+            boardSize += 5;
+        }
     function placeLetter(coord, letter) {
         const [row, col] = convertCoord(coord);
         if (row !== null && col !== null && board[row][col] === ' ') {
+            if (row === board.length - 1 || col === board[0].length - 1) {
+                expandBoard()
+            }
                     board[row][col] = letter;
                     return true;
                 }
             
-            }
+    }
         function isBoardEmpty() {
         for (let r = 0; r < boardSize; r++) {
             for (let c = 0; c < boardSize; c++) {
