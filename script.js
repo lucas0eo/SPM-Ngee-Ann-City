@@ -93,21 +93,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!boardNotEmpty || isAdjacentOccupied(row, col)) {
                     boardNotEmpty = true;
                     coins--; // Deduct 1 coin per construction
-                    let prevScore = score;
-                    if (letter === "R") {
-                        result = calculateResidentialScore(board, row, col, score, coins);
-                    } else if (letter === "I") {
-                        result = calculateIndustryScore(board, row, col, score, coins);
-                    } else if (letter === "C") {
-                        result = calculateCommercialScore(board, row, col, score, coins);
-                    } else if (letter === "O") {
-                        result = calculateParkScore(board, row, col, score, coins);
-                    } else if (letter === "*") {
-                        result = calculateRoadScore(board, row, col, score, coins);
-                    }
-                    score = prevScore + result.score; // Add new score to previous score
-                    coins = result.coins;
                     board[row][col] = letter;
+                    updatePoints(); // Update points after placing the letter
                     updateRandomLetters();
                     pointsElement.textContent = score; // Update points display
                     coinsElement.textContent = coins; // Update coins display
@@ -144,7 +131,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return true;
     }
 
-    function demolishBuilding(coord) {
+     function demolishBuilding(coord) {
         const [row, col] = convertCoord(coord);
         if (row !== null && col !== null && board[row][col] !== ' ') {
             if (coins > 1) {
@@ -164,7 +151,6 @@ document.addEventListener('DOMContentLoaded', function () {
             alert("No building detected at the given coordinates.");
         }
     }
-
     function isAdjacentOccupied(row, col) {
         if (isBoardEmpty()) {
             return false;
@@ -203,118 +189,124 @@ document.addEventListener('DOMContentLoaded', function () {
         return count;
     }
 
-    function calculateResidentialScore(board, row, col, score, coins) {
+    function calculateResidentialScore(board, row, col) {
         let adjacentIndustryCount = countAdjacent(board, row, col, 'I');
         let adjacentResidentialCount = countAdjacent(board, row, col, 'R');
         let adjacentCommercialCount = countAdjacent(board, row, col, 'C');
         let adjacentParkCount = countAdjacent(board, row, col, 'O');
 
         if (adjacentIndustryCount > 0) {
-            score += 1;
+            return 1;
         } else {
-            score += adjacentResidentialCount;
-            score += adjacentCommercialCount;
-            score += adjacentParkCount * 2;
+            return adjacentResidentialCount + adjacentCommercialCount + (adjacentParkCount * 2);
         }
-        return { score, coins };
     }
 
-    function calculateIndustryScore(board, row, col, score, coins) {
-        score += board.flat().filter(cell => cell === 'I').length;
+    function calculateIndustryScore(board, row, col) {
+        let score = board.flat().filter(cell => cell === 'I').length;
         let adjacentResidentialCount = countAdjacent(board, row, col, 'R');
         coins += adjacentResidentialCount;
-        return { score, coins };
+        return score;
     }
 
-    function calculateCommercialScore(board, row, col, score, coins) {
+    function calculateCommercialScore(board, row, col) {
         let adjacentCommercialCount = countAdjacent(board, row, col, 'C');
         let adjacentResidentialCount = countAdjacent(board, row, col, 'R');
 
-        score += adjacentCommercialCount;
+        
         coins += adjacentResidentialCount;
-        return { score, coins };
+        return adjacentCommercialCount;
     }
 
-    function calculateParkScore(board, row, col, score, coins) {
+    function calculateParkScore(board, row, col) {
         let adjacentParkCount = countAdjacent(board, row, col, 'O');
-        score += adjacentParkCount;
-        return { score, coins };
+        return adjacentParkCount;
     }
 
-    function calculateRoadScore(board, row, col, score, coins) {
+    function calculateRoadScore(board, row, col) {
         let roadCount = 0;
         for (let c = 0; c < boardSize; c++) {
             if (board[row][c] === '*') {
                 roadCount++;
             }
         }
-        score += roadCount;
-        return { score, coins };
+        return roadCount;
     }
 
-    printBoard();
+    function updatePoints() {
+        score = 0; // Reset score before recalculating
 
-    placeLetterForm.addEventListener('submit', function (event) {
-        event.preventDefault();
-        const coordInput = document.getElementById('coordinate');
-        const letterInput = document.getElementById('letter');
-        const coord = coordInput.value.trim().toUpperCase();
-        const letter = letterInput.value.trim().toUpperCase();
-        if (coord && letter) {
-            placeLetter(coord, letter);
+        for (let r = 0; r < boardSize; r++) {
+            for (let c = 0; c < boardSize; c++) {
+                if (board[r][c] != ' ') {
+                    switch (board[r][c]) {
+                        case 'R':
+                            score += calculateResidentialScore(board, r, c);
+                            break;
+                        case 'I':
+                            score += calculateIndustryScore(board, r, c);
+                            break;
+                        case 'C':
+                            score += calculateCommercialScore(board, r, c);
+                            break;
+                        case 'O':
+                            score += calculateParkScore(board, r, c);
+                            break;
+                        case '*':
+                            score += calculateRoadScore(board, r, c);
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
         }
-        coordInput.value = '';
-        letterInput.value = '';
-    });
+    }
 
-    demolishBuildingForm.addEventListener('submit', function (event) {
-        event.preventDefault();
-        const coordInput = document.getElementById('demolishCoord').value;
-        demolishBuilding(coordInput);
+    placeLetterForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const coord = document.getElementById('coordinate').value.trim();
+        const letter = document.getElementById('letter').value.trim();
+    
+        const result = placeLetter(coord, letter);-7
+        if (result.bool) {
+            sessionStorage.setItem(FREE_PLAY_KEY, JSON.stringify({
+                score,
+                coins,
+                board
+            }));
+            sessionStorage.setItem(ARCADE_KEY, JSON.stringify({
+                score,
+                coins,
+                board
+            }));
+        }
     });
+    
 
-    const saveGameButton = document.getElementById('saveGame');
-    saveGameButton.addEventListener('click', function () {
-        saveGame(currentGameMode);
-        window.location.href = "mainpage.html";
-    });
+    function loadGame() {
+        const freePlayState = sessionStorage.getItem(FREE_PLAY_KEY);
+        const arcadeState = sessionStorage.getItem(ARCADE_KEY);
 
-    const loadGameButton = document.getElementById('loadGame');
-    loadGameButton.addEventListener('click', function () {
-        loadGame(currentGameMode);
+        if (referrer === 'freeplay.html' && freePlayState) {
+            const { score: loadedScore, coins: loadedCoins, board: loadedBoard } = JSON.parse(freePlayState);
+            score = loadedScore;
+            coins = loadedCoins;
+            board = loadedBoard;
+            pointsElement.textContent = score;
+            coinsElement.textContent = coins;
+            currentGameMode = 'freeplay';
+        } else if (referrer === 'arcade.html' && arcadeState) {
+            const { score: loadedScore, coins: loadedCoins, board: loadedBoard } = JSON.parse(arcadeState);
+            score = loadedScore;
+            coins = loadedCoins;
+            board = loadedBoard;
+            pointsElement.textContent = score;
+            coinsElement.textContent = coins;
+            currentGameMode = 'arcade';
+        }
         printBoard();
-    });
-
-    const backButton = document.getElementById('back');
-    backButton.addEventListener('click', function () {
-        window.location.href = "mainpage.html";
-    });
-
-    function saveGame(mode) {
-        const gameState = {
-            board: board,
-            score: score,
-            coins: coins,
-            randomLetter1: randomLetter1,
-            randomLetter2: randomLetter2,
-        };
-        const key = mode === 'arcade' ? ARCADE_KEY : FREE_PLAY_KEY;
-        localStorage.setItem(key, JSON.stringify(gameState));
     }
 
-    function loadGame(mode) {
-        const key = mode === 'arcade' ? ARCADE_KEY : FREE_PLAY_KEY;
-        const gameState = JSON.parse(localStorage.getItem(key));
-        if (gameState) {
-            board = gameState.board;
-            score = gameState.score;
-            coins = gameState.coins;
-            randomLetter1 = gameState.randomLetter1;
-            randomLetter2 = gameState.randomLetter2;
-            pointsElement.textContent = score; // Update points display
-            coinsElement.textContent = coins; // Update coins display
-        }
-    }
-
-    console.log('Game initialized.');
+    loadGame();
 });
