@@ -123,18 +123,20 @@
             function updateProfitAndUpkeep() {
                 profit = 0;
                 upkeep = 0;
+                console.log("P: ",profit ,"up: " ,upkeep)
                 let residentialUpkeep = 0;
                 let visited = Array.from({ length: boardSize }, () => Array(boardSize).fill(false));
-    
+
                 for (let r = 0; r < boardSize; r++) {
                     for (let c = 0; c < boardSize; c++) {
                         let building = board[r][c];
-                        if (building !== ' ' && !visited[r][c]) {
+                        if (building === 'R' && !visited[r][c]) {
                             let clusterSize = findResidentialCluster(r, c, building, visited);
+                            console.log("Cluster Size: ",clusterSize);
                             profit += clusterSize;
                             residentialUpkeep += 1;
                         }
-    
+
                         switch (building) {
                             case 'I':
                                 profit += 2;
@@ -150,24 +152,27 @@
                             case '*':
                                 if (!isConnected(r, c)) {
                                     upkeep += 1;
+                                    console.log(upkeep)
                                 }
                                 break;
                         }
                     }
                 }
-    
+
+                console.log("Res Upkeep: ",residentialUpkeep)
                 upkeep += residentialUpkeep;
+                console.log("P: ",profit ,"up: " ,upkeep)
                 profitElement.textContent = `Profit: ${profit}`;
                 upkeepElement.textContent = `Upkeep: ${upkeep}`;
-    
+
                 if (upkeep > profit) {
                     turnsExceeded++;
                 } else {
                     turnsExceeded = 0;
                 }
-    
+
                 turnsExceededElement.textContent = `Turns upkeep exceeded profit: ${turnsExceeded}`;
-    
+
                 if (turnsExceeded >= 20) {
                     alert("Game Over: Upkeep has exceeded profit for 20 turns!");
                     resetGame();
