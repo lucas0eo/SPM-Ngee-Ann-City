@@ -29,7 +29,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         return randomLetters;
     }
-
     function updateRandomLetters() {
         [randomLetter1, randomLetter2] = getRandomLetters();
         randomLetter1Element.textContent = `Letter 1: ${randomLetter1}`;
@@ -281,31 +280,120 @@ document.addEventListener('DOMContentLoaded', function () {
             }));
         }
     });
-    
 
-    function loadGame() {
-        const freePlayState = sessionStorage.getItem(FREE_PLAY_KEY);
-        const arcadeState = sessionStorage.getItem(ARCADE_KEY);
+    // function loadGame() {
+    //     const freePlayState = sessionStorage.getItem(FREE_PLAY_KEY);
+    //     const arcadeState = sessionStorage.getItem(ARCADE_KEY);
 
-        if (referrer === 'freeplay.html' && freePlayState) {
-            const { score: loadedScore, coins: loadedCoins, board: loadedBoard } = JSON.parse(freePlayState);
-            score = loadedScore;
-            coins = loadedCoins;
-            board = loadedBoard;
-            pointsElement.textContent = score;
-            coinsElement.textContent = coins;
-            currentGameMode = 'freeplay';
-        } else if (referrer === 'arcade.html' && arcadeState) {
-            const { score: loadedScore, coins: loadedCoins, board: loadedBoard } = JSON.parse(arcadeState);
-            score = loadedScore;
-            coins = loadedCoins;
-            board = loadedBoard;
-            pointsElement.textContent = score;
-            coinsElement.textContent = coins;
-            currentGameMode = 'arcade';
+    //     if (referrer === 'freeplay.html' && freePlayState) {
+    //         const { score: loadedScore, coins: loadedCoins, board: loadedBoard } = JSON.parse(freePlayState);
+    //         score = loadedScore;
+    //         coins = loadedCoins;
+    //         board = loadedBoard;
+    //         pointsElement.textContent = score;
+    //         coinsElement.textContent = coins;
+    //         currentGameMode = 'freeplay';
+    //     } else if (referrer === 'arcade.html' && arcadeState) {
+    //         const { score: loadedScore, coins: loadedCoins, board: loadedBoard } = JSON.parse(arcadeState);
+    //         score = loadedScore;
+    //         coins = loadedCoins;
+    //         board = loadedBoard;
+    //         pointsElement.textContent = score;
+    //         coinsElement.textContent = coins;
+    //         currentGameMode = 'arcade';
+    //     }
+    //     printBoard();
+    // }
+    function saveGame() {
+        const check = localStorage.getItem('check')
+        const fileName = prompt('Enter a file name to save the game:');
+        if (fileName !== check){
+        if (!fileName) {
+            alert('File name cannot be empty!');
+            return;
         }
-        printBoard();
+        const gameState = {
+            mode: 'arcade',
+            board,
+            boardSize,
+            score,
+            coins,
+        };
+        const saveKey = `${fileName}`;
+        localStorage.setItem('check',fileName)
+        localStorage.setItem(saveKey, JSON.stringify(gameState));
+        alert('Game saved!');
+        return true;
+    }else{
+        alert("Cannot have 2 same file names")
+        return false;
+    }
     }
 
-    loadGame();
+    function loadGame() {
+        const saveKey1 = localStorage.getItem('name')
+        const gameState = JSON.parse(localStorage.getItem(saveKey1));
+        if (gameState) {
+            board = gameState.board;
+            boardSize = gameState.boardSize;
+            profit = gameState.profit;
+            upkeep = gameState.upkeep;
+            turnsExceeded = gameState.turnsExceeded;
+            printBoard();
+            alert('Game loaded!');
+        }
+    }
+    function isBoardEmpty() {
+        for (let r = 0; r < boardSize; r++) {
+            for (let c = 0; c < boardSize; c++) {
+                if (board[r][c] !== ' ') {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+
+    document.getElementById('saveGame').addEventListener('click', function () {
+        if (isBoardEmpty()) {
+            alert("Cannot save an empty board");
+            return;
+        } else {
+            if(saveGame()){
+                fadeOutAndNavigate('mainpage.html');
+            }
+            sessionStorage.setItem('from','a')
+            }
+    });
+
+    document.getElementById('loadGame').addEventListener('click', function () {
+        loadGame();
+    });
+
+    document.getElementById('back').addEventListener('click', function () {
+        fadeOutAndNavigate('mainpage.html');
+    });
+
+
+    if (referrer === 'arcadeGame') {
+        loadGame();
+        sessionStorage.removeItem('referrer');
+    }
+
+    function fadeOutAndNavigate(targetUrl) {
+        document.body.style.transition = "opacity 2s";
+        document.body.style.opacity = "0";
+        setTimeout(function () {
+            window.location.href = targetUrl;
+        }, 2000);
+    }
+ 
+    
+    printBoard();
+
 });
+
+
+
+

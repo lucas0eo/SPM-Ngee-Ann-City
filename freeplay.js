@@ -217,6 +217,13 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     function saveGame() {
+        const check = localStorage.getItem('check')
+        const fileName = prompt('Enter a file name to save the game:');
+        if(fileName!==check){
+        if (!fileName) {
+            alert('File name cannot be empty!');
+            return;
+        }
         const gameState = {
             mode: 'freePlay',
             board,
@@ -225,23 +232,24 @@ document.addEventListener('DOMContentLoaded', function () {
             upkeep,
             turnsExceeded,
         };
-        const saveKey = currentGameMode === 'freePlay' ? FREE_PLAY_KEY : ARCADE_KEY;
+        const saveKey = `${fileName}`;
+        localStorage.setItem('check',fileName)
         localStorage.setItem(saveKey, JSON.stringify(gameState));
         alert('Game saved!');
+        return true;
+    }else{
+        alert("Cannot have files with the same name")
+        return false;
+    }
     }
 
     function loadGame() {
-        const loadKey = currentGameMode === 'freePlay' ? FREE_PLAY_KEY : ARCADE_KEY;
-        const gameState = JSON.parse(localStorage.getItem(loadKey));
-        if (gameState.mode !== currentGameMode) {
-            alert('Error: Trying to load a game from a different mode!');
-            return;
-        }
-        if (isBoardEmpty()) {
-            alert('No saved game found!');
-            window.location.href = 'mainpage.html';
-            return;
-        }
+        const saveKey1 = localStorage.getItem('name')
+        const gameState = JSON.parse(localStorage.getItem(saveKey1));
+        // if (gameState.mode !== currentGameMode) {
+        //     alert('Error: Trying to load a game from a different mode!');
+        //     return;
+        // }
         if (gameState) {
             board = gameState.board;
             boardSize = gameState.boardSize;
@@ -275,8 +283,10 @@ document.addEventListener('DOMContentLoaded', function () {
             alert("Cannot save an empty board");
             return;
         } else {
-            saveGame();
-            fadeOutAndNavigate('mainpage.html');
+            if(saveGame()){
+                fadeOutAndNavigate('mainpage.html');
+            }
+            sessionStorage.setItem('from','fp')
         }
     });
 

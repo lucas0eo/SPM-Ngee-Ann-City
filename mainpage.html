@@ -137,26 +137,41 @@
     </div>
     </div>
 </div>
-
 <script>
-    document.getElementById('newGameContainer').addEventListener('click', function () {
+       document.getElementById('newGameContainer').addEventListener('click', function () {
+        console.log("HIHI")
         fadeOutAndNavigate('options.html');
     });
-    document.getElementById('continueContainer').addEventListener('click', function () {
-        const selectedGameMode = localStorage.getItem('selectedGameMode');
-        if (selectedGameMode === 'arcade') {
-            // Arcade mode specific initialization
-            sessionStorage.setItem('referrer', 'arcadeGame');
-            fadeOutAndNavigate('game.html');
-
-        } else if (selectedGameMode === 'freeplay') {
-            // Free Play mode specific initialization
-            sessionStorage.setItem('referrer', 'freePlayGame');
-            fadeOutAndNavigate('freeplay.html')
-            
-        } else {
-            console.error('No game mode selected');
+       document.getElementById('continueContainer').addEventListener('click', function () {
+        const selectGM = localStorage.getItem('selectedGameMode')
+        const file = prompt('Enter the file name to load the game:');
+        localStorage.setItem('name',file)
+        const from = sessionStorage.getItem('from')
+        if (!file) {
+            alert('File name cannot be empty!');
+            window.location.href = 'mainpage.html';
+            return;
         }
+        function Game() {
+        if (from === 'a') {
+            sessionStorage.setItem('referrer', 'arcadeGame')
+            fadeOutAndNavigate('game.html')
+        }
+        else if(from === 'fp'){
+            sessionStorage.setItem('referrer', 'freePlayGame')
+            fadeOutAndNavigate('freeplay.html')
+        }
+        else{
+            const storedFile = localStorage.getItem(file);
+            if (storedFile === null){
+            console.log("File not found or file is not the most recent file")
+            window.location.href = 'mainpage.html';
+            return
+            }
+        }
+        
+    }
+    Game();
     });
 
     function fadeOutAndNavigate(targetUrl) {
@@ -164,9 +179,20 @@
         document.body.style.opacity = "0";
         setTimeout(function () {
             window.location.href = targetUrl;
-        }, 2000); // Wait for the transition to complete
+        }, 2000);
     }
 </script>
+<!-- <script>
+
+
+    function fadeOutAndNavigate(targetUrl) {
+        document.body.style.transition = "opacity 2s";
+        document.body.style.opacity = "0";
+        setTimeout(function () {
+            window.location.href = targetUrl;
+        }, 2000);
+    }
+</script> -->
 </body>
 </html>
 
