@@ -128,19 +128,28 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         return true;
     }
+    
+    document.getElementById('demolishBuildingForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const coord = document.getElementById('demolishCoord').value.trim();
+        demolishBuilding(coord);
+    });
 
-     function demolishBuilding(coord) {
+    function demolishBuilding(coord) {
         const [row, col] = convertCoord(coord);
         if (row !== null && col !== null && board[row][col] !== ' ') {
             if (coins > 1) {
                 const building = board[row][col];
                 board[row][col] = ' ';
                 coins -= 1; // Deduct 1 coin for demolition
-
+    
+                // Recalculate the score after demolition
+                updatePoints();
+    
                 pointsElement.textContent = score; // Update points display
                 coinsElement.textContent = coins; // Update coins display
                 printBoard();
-
+    
                 alert("Building demolished.");
             } else {
                 alert("Not enough coins to demolish the building.");
@@ -149,6 +158,7 @@ document.addEventListener('DOMContentLoaded', function () {
             alert("No building detected at the given coordinates.");
         }
     }
+    
     function isAdjacentOccupied(row, col) {
         if (isBoardEmpty()) {
             return false;
