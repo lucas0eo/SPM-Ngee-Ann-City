@@ -260,7 +260,10 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
     }
-
+    document.getElementById('demolishCoord1').addEventListener('click', function () {
+        const demolish = document.getElementById('demolishCoord').value.trim();
+        demolishBuilding(demolish)
+    });
     placeLetterForm.addEventListener('submit', function (e) {
         e.preventDefault();
         const coord = document.getElementById('coordinate').value.trim();
