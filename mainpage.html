@@ -141,7 +141,7 @@
        document.getElementById('newGameContainer').addEventListener('click', function () {
         console.log("HIHI")
         fadeOutAndNavigate('options.html');
-    });
+        });
        document.getElementById('continueContainer').addEventListener('click', function () {
         const selectGM = localStorage.getItem('selectedGameMode')
         const file = prompt('Enter the file name to load the game:');
@@ -172,6 +172,10 @@
         
     }
     Game();
+    });
+
+    document.getElementById('leaderboardContainer').addEventListener('click', function () {
+        fadeOutAndNavigate('leaderboardOption.html');
     });
 
     function fadeOutAndNavigate(targetUrl) {
