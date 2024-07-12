@@ -1,6 +1,6 @@
 
 document.addEventListener('DOMContentLoaded', function () {
-    let boardSize = 5;
+    let boardSize = 100;
     let board = Array.from({ length: boardSize }, () => Array(boardSize).fill(' '));
     let gridContainer = document.getElementById('grid');
     let placeLetterForm = document.getElementById('placeLetterForm');

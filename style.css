@@ -1,0 +1,107 @@
+body {
+    font-family: Arial, sans-serif;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center child elements horizontally */
+}
+
+#menu {
+    width: 100%;
+    max-width: 100%;
+    text-align: center;
+}
+
+#gameBoard {
+    width: 100%;
+    display: flex;
+    justify-content: center; /* Center the grid container */
+    margin-top: 20px;
+    overflow: auto; /* Enable scrolling for overflow */
+}
+
+#grid {
+    display: grid;
+    gap: 2px;
+    text-align: center;
+    margin: 0 auto; 
+    overflow: auto; /* Enable scrolling for overflow */
+}
+
+.grid-header {
+    font-weight: bold;
+}
+.selected-letter {
+    background:rgb(237, 237, 148);
+    padding: 5px;
+    display: inline-flex; /* Use flexbox to align items */
+    justify-content: center; /* Center items horizontally */
+    align-items: center; /* Center items vertically */
+    text-align: center; /* Center text horizontally */
+}
+
+
+.grid-cell {
+    border: 1px solid #000;
+    width: 30px;
+    height: 30px;
+    text-align: center;
+    line-height: 30px;
+    font-size: 20px;
+}
+#sticky-bar {
+    width: 70%;
+    height: 100px;
+    background: #f0f0f0;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    border-radius: 5px;
+    font-size: 24px; /* Adjust the font size as needed */
+    color: #000; /* Black color */
+    letter-spacing: 50px; /* Adjust letter spacing as needed */
+}
+.box {
+    width: 200px;
+    height: 200px;
+    background-color: #f0f0f0;
+    margin: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+/* Sticky bar at the bottom
+#bar {
+    position:fixed;
+    bottom: 0;
+    width: 60%;
+    background-color: #f0f0f0;
+    color: black;
+    text-align: center;
+    padding: 10px 0;
+    font-size: 20px;
+    z-index: 1000;
+    margin: 0 auto; Center the sticky bar horizontally 
+    left: 50%;
+    transform: translateX(-50%);
+    height:20%
+} */
+
+#gameInfo {
+    background-color: #f0f0f0;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+#gameInfo p {
+    margin: 0;
+    font-weight: bold;
+}
+
+#gameInfo span {
+    margin-left: 5px;
+}

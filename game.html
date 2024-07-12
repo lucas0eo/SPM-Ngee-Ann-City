@@ -5,48 +5,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Grid Game</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
     <div class="container">
         <div id="menu">
-            <h2>Arcade Game Menu</h2>
+            <h2>Arcade Game</h2>
             <div id="gameInfo">
                 <p>Points: <span id="points">0</span></p>
                 <p>Coins: <span id="coins">16</span></p>
             </div>
-            <form id="placeLetterForm">
-                <label for="coordinate">Coordinate (e.g., A1):</label>
-                <input type="text" id="coordinate" name="coordinate">
-                <label for="letter">Letter:</label>
-                <input type="text" id="letter" name="letter" maxlength="1">
-                <button type="submit">Place Letter</button>
-            </form>
-            <div id="randomLetters">
-                <h3>Randomly Selected Letters:</h3>
-                <p id="randomLetter1">Letter 1: </p>
-                <p id="randomLetter2">Letter 2: </p>
-            </div>
-            <div>
-                <button id="saveGame" onclick = 'saveGame()'>Go home and save Game</button>
-                <button id="loadGame" onclick = 'loadGame()'>Load Saved Game</button>
-                <button id="back">Quit game</button>
-                <button id="demolishGame">Demolish Building</button>
-                <div id="demolishBuildingForm">
-                    <label for="demolishCoord">Coordinate (e.g., A1):</label>
-                    <input type="text" id="demolishCoord" required>
-                    <button type="submit" id = "demolishCoord1">Demolish Building</button>
-                </div>
-                
+            <div id="gameBoard">
+                <div id="grid"></div>
             </div>
         </div>
-        <div id="gameBoard">
-            <h2>Game Board</h2>
-            <div id="grid"></div>
-        </div>
+        <div id="sticky-bar" class="sticky-bar"></div>
+        <button id = "saveGame">Save Game</div>
+        <button id = "back">Quit Game</button>
     </div>
     <script src="script.js"></script>
 </body>
-
 </html>

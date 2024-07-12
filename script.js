@@ -2,41 +2,19 @@ document.addEventListener('DOMContentLoaded', function () {
     let score = 0;
     let coins = 16;
     let boardSize = 20;
+    const stickyBar = document.getElementById('sticky-bar');
+    stickyBar.style.position = 'fixed';
+    stickyBar.style.bottom = '0';
     let board = Array.from({ length: boardSize }, () => Array(boardSize).fill(' '));
     const gridContainer = document.getElementById('grid');
-    const placeLetterForm = document.getElementById('placeLetterForm');
-    const randomLetter1Element = document.getElementById('randomLetter1');
-    const randomLetter2Element = document.getElementById('randomLetter2');
     const pointsElement = document.getElementById('points');
     const coinsElement = document.getElementById('coins');
 
     let referrer = sessionStorage.getItem('referrer');
     let boardNotEmpty = false;
-    const FREE_PLAY_KEY = 'freePlayGridGameState';
-    const ARCADE_KEY = 'arcadeGridGameState';
     let currentGameMode = 'arcade';
+    let selectedLetter = ''; // Variable to hold the currently selected letter
 
-    let [randomLetter1, randomLetter2] = getRandomLetters();
-
-    function getRandomLetters() {
-        const letters = ['R', 'I', 'C', 'O', '*'];
-        const randomLetters = [];
-        while (randomLetters.length < 2) {
-            const letter = letters[Math.floor(Math.random() * letters.length)];
-            if (!randomLetters.includes(letter)) {
-                randomLetters.push(letter);
-            }
-        }
-        return randomLetters;
-    }
-    function updateRandomLetters() {
-        [randomLetter1, randomLetter2] = getRandomLetters();
-        randomLetter1Element.textContent = `Letter 1: ${randomLetter1}`;
-        randomLetter2Element.textContent = `Letter 2: ${randomLetter2}`;
-    }
-
-    randomLetter1Element.textContent += randomLetter1;
-    randomLetter2Element.textContent += randomLetter2;
 
     function printBoard() {
         console.log("Printing board...");
@@ -65,90 +43,55 @@ document.addEventListener('DOMContentLoaded', function () {
                 const cell = document.createElement('div');
                 cell.classList.add('grid-cell');
                 cell.textContent = board[r][c];
+                cell.addEventListener('click', function () {
+                    if (selectedLetter !== '' && board[r][c] === ' ') {
+                        if(!boardNotEmpty || isAdjacentOccupied(r, c)){
+                            boardNotEmpty = true;
+                            coins--;
+                            board[r][c] = selectedLetter;
+                            pointsElement.textContent = score; // Update points display
+                            coinsElement.textContent = coins; // Update coins display
+                            updatePoints();
+                            updateStickyBar();
+                            printBoard();
+                            // Check if arcade / free mode should end after placing this letter
+                            if (currentGameMode == 'arcade'){
+                                if (coins == 0){
+                                    alert(`Game Ended! Your score: ${score}`);
+                                }
+                            } 
+                        } else{
+                            alert("Letter must be placed adjacent to a previously placed letter.");
+                        }
+                    } else {
+                        alert('Please select a letter from the sticky bar.');
+                    }
+                });
                 gridContainer.appendChild(cell);
             }
         }
     }
 
-    function convertCoord(coord) {
-        const regex = /^([A-Za-z])(\d+)$/;
-        const match = coord.match(regex);
-        if (!match) return [null, null];
-        const row = match[1].toUpperCase().charCodeAt(0) - 65;
-        const col = parseInt(match[2], 10) - 1;
-        if (row >= 0 && row < boardSize && col >= 0 && col < boardSize) {
-            return [row, col];
-        } else {
-            return [null, null];
-        }
-    }
+    //  function demolishBuilding(coord) {
+    //     const [row, col] = convertCoord(coord);
+    //     if (row !== null && col !== null && board[row][col] !== ' ') {
+    //         if (coins > 1) {
+    //             const building = board[row][col];
+    //             board[row][col] = ' ';
+    //             coins -= 1; // Deduct 1 coin for demolition
 
-    function placeLetter(coord, letter) {
-        let result = { score, coins };
-        const [row, col] = convertCoord(coord);
-        if (row !== null && col !== null && board[row][col] === ' ') {
-            if (letter === randomLetter1 || letter === randomLetter2) {
-                if (!boardNotEmpty || isAdjacentOccupied(row, col)) {
-                    boardNotEmpty = true;
-                    coins--; // Deduct 1 coin per construction
-                    board[row][col] = letter;
-                    updatePoints(); // Update points after placing the letter
-                    updateRandomLetters();
-                    pointsElement.textContent = score; // Update points display
-                    coinsElement.textContent = coins; // Update coins display
-                    printBoard();
+    //             pointsElement.textContent = score; // Update points display
+    //             coinsElement.textContent = coins; // Update coins display
+    //             printBoard();
 
-                    // Check if arcade / free mode should end after placing this letter
-                    if (currentGameMode == 'arcade'){
-                        if (coins == 0){
-                            alert(`Game Ended! Your score: ${score}`);
-                        }
-                    } 
-
-                    return { info: result, bool: true };
-                } else {
-                    alert("Letter must be placed adjacent to a previously placed letter.");
-                }
-            } else {
-                alert("Invalid letter selected.");
-            }
-        } else {
-            alert("Invalid coordinate or cell already occupied.");
-        }
-        return { bool: false };
-    }
-
-    function isBoardEmpty() {
-        for (let r = 0; r < boardSize; r++) {
-            for (let c = 0; c < boardSize; c++) {
-                if (board[r][c] !== ' ') {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-     function demolishBuilding(coord) {
-        const [row, col] = convertCoord(coord);
-        if (row !== null && col !== null && board[row][col] !== ' ') {
-            if (coins > 1) {
-                const building = board[row][col];
-                board[row][col] = ' ';
-                coins -= 1; // Deduct 1 coin for demolition
-
-                pointsElement.textContent = score; // Update points display
-                coinsElement.textContent = coins; // Update coins display
-                printBoard();
-
-                alert("Building demolished.");
-            } else {
-                alert("Not enough coins to demolish the building.");
-            }
-        } else {
-            alert("No building detected at the given coordinates.");
-        }
-    }
+    //             alert("Building demolished.");
+    //         } else {
+    //             alert("Not enough coins to demolish the building.");
+    //         }
+    //     } else {
+    //         alert("No building detected at the given coordinates.");
+    //     }
+    // }
     function isAdjacentOccupied(row, col) {
         if (isBoardEmpty()) {
             return false;
@@ -260,53 +203,29 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
     }
-    document.getElementById('demolishCoord1').addEventListener('click', function () {
-        const demolish = document.getElementById('demolishCoord').value.trim();
-        demolishBuilding(demolish)
-    });
-    placeLetterForm.addEventListener('submit', function (e) {
-        e.preventDefault();
-        const coord = document.getElementById('coordinate').value.trim();
-        const letter = document.getElementById('letter').value.trim();
+    // document.getElementById('demolishCoord1').addEventListener('click', function () {
+    //     const demolish = document.getElementById('demolishCoord').value.trim();
+    //     demolishBuilding(demolish)
+    // });
+    // placeLetterForm.addEventListener('submit', function (e) {
+    //     e.preventDefault();
+    //     const coord = document.getElementById('coordinate').value.trim();
+    //     const letter = document.getElementById('letter').value.trim();
     
-        const result = placeLetter(coord, letter);
-        if (result.bool) {
-            sessionStorage.setItem(FREE_PLAY_KEY, JSON.stringify({
-                score,
-                coins,
-                board
-            }));
-            sessionStorage.setItem(ARCADE_KEY, JSON.stringify({
-                score,
-                coins,
-                board
-            }));
-        }
-    });
-
-    // function loadGame() {
-    //     const freePlayState = sessionStorage.getItem(FREE_PLAY_KEY);
-    //     const arcadeState = sessionStorage.getItem(ARCADE_KEY);
-
-    //     if (referrer === 'freeplay.html' && freePlayState) {
-    //         const { score: loadedScore, coins: loadedCoins, board: loadedBoard } = JSON.parse(freePlayState);
-    //         score = loadedScore;
-    //         coins = loadedCoins;
-    //         board = loadedBoard;
-    //         pointsElement.textContent = score;
-    //         coinsElement.textContent = coins;
-    //         currentGameMode = 'freeplay';
-    //     } else if (referrer === 'arcade.html' && arcadeState) {
-    //         const { score: loadedScore, coins: loadedCoins, board: loadedBoard } = JSON.parse(arcadeState);
-    //         score = loadedScore;
-    //         coins = loadedCoins;
-    //         board = loadedBoard;
-    //         pointsElement.textContent = score;
-    //         coinsElement.textContent = coins;
-    //         currentGameMode = 'arcade';
+    //     const result = placeLetter(coord, letter);
+    //     if (result.bool) {
+    //         sessionStorage.setItem(FREE_PLAY_KEY, JSON.stringify({
+    //             score,
+    //             coins,
+    //             board
+    //         }));
+    //         sessionStorage.setItem(ARCADE_KEY, JSON.stringify({
+    //             score,
+    //             coins,
+    //             board
+    //         }));
     //     }
-    //     printBoard();
-    // }
+    // });
     function saveGame() {
         const check = localStorage.getItem('check')
         const fileName = prompt('Enter a file name to save the game:');
@@ -322,9 +241,11 @@ document.addEventListener('DOMContentLoaded', function () {
             score,
             coins,
         };
+
         const saveKey = `${fileName}`;
         localStorage.setItem('check',fileName)
         localStorage.setItem(saveKey, JSON.stringify(gameState));
+        console.log(saveKey)
         alert('Game saved!');
         return true;
     }else{
@@ -334,7 +255,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function loadGame() {
-        const saveKey1 = localStorage.getItem('name')
+        const saveKey1 = localStorage.getItem('check')
         const gameState = JSON.parse(localStorage.getItem(saveKey1));
         if (gameState) {
             board = gameState.board;
@@ -367,12 +288,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 fadeOutAndNavigate('mainpage.html');
             }
             sessionStorage.setItem('from','a')
-            }
+        }
     });
 
-    document.getElementById('loadGame').addEventListener('click', function () {
-        loadGame();
-    });
 
     document.getElementById('back').addEventListener('click', function () {
         fadeOutAndNavigate('mainpage.html');
@@ -391,9 +309,57 @@ document.addEventListener('DOMContentLoaded', function () {
             window.location.href = targetUrl;
         }, 2000);
     }
- 
+        // Adjust sticky bar based on scroll position
+        window.addEventListener('scroll', function () {
+            const gridRect = gridContainer.getBoundingClientRect();
+            const viewportHeight = window.innerHeight;
     
-    printBoard();
+            if (gridRect.bottom < viewportHeight) {
+                stickyBar.style.removeProperty('position');
+                stickyBar.style.removeProperty('bottom');
+            } else {
+                stickyBar.style.position = 'fixed';
+                stickyBar.style.bottom = '0';
+            }
+        });
+        
+    // Function to get 2 random letters from an array of 5 letters
+    function getRandomLetters() {
+        const letters = ['R', 'I', 'C', 'O', '*']; // Array of 5 letters
+        const randomIndices = [];
+        while (randomIndices.length < 2) {
+            const randomIndex = Math.floor(Math.random() * letters.length);
+            if (!randomIndices.includes(randomIndex)) {
+                randomIndices.push(randomIndex);
+            }
+        }
+        return [letters[randomIndices[0]], letters[randomIndices[1]]];
+    }
+
+    // Update sticky bar with random letters
+    function updateStickyBar() {
+        const [letter1, letter2] = getRandomLetters();
+        stickyBar.innerHTML = ''; // Clear previous content
+        const letterSpan1 = document.createElement('span');
+        letterSpan1.textContent = letter1;
+        letterSpan1.addEventListener('click', function () {
+            letterSpan1.classList.toggle('selected-letter');
+            letterSpan2.classList.remove('selected-letter');
+            selectedLetter = letter1;
+        });
+        const letterSpan2 = document.createElement('span');
+        letterSpan2.textContent = letter2;
+        letterSpan2.addEventListener('click', function () {
+            letterSpan2.classList.toggle('selected-letter');
+            letterSpan1.classList.remove('selected-letter');
+            selectedLetter = letter2;
+        });
+        stickyBar.appendChild(letterSpan1);
+        stickyBar.appendChild(letterSpan2);
+    }
+updateStickyBar()
+ printBoard()
+    
 
 });
 
