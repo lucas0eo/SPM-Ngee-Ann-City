@@ -84,6 +84,16 @@ document.addEventListener('DOMContentLoaded', function () {
         return false;
     }
 
+    function demolishBuilding(coord) {
+        const [row, col] = convertCoord(coord);
+        if (row !== null && col !== null && board[row][col] !== ' ') {
+            board[row][col] = ' ';
+            updateProfitAndUpkeep();
+            return true;
+        }
+        return false;
+    }
+
     function updateProfitAndUpkeep() {
         profit = 0;
         upkeep = 0;
