@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let profit = 0;
     let upkeep = 0;
-    let turnsExceeded = 0;
+    let turnsExceeded = 20;
 
     function printBoard() {
         gridContainer.innerHTML = '';
@@ -140,14 +140,12 @@ document.addEventListener('DOMContentLoaded', function () {
         upkeepElement.textContent = `Upkeep: ${upkeep}`;
 
         if (upkeep > profit) {
-            turnsExceeded++;
-        } else {
-            turnsExceeded = 0;
+            turnsExceeded--;
         }
 
-        turnsExceededElement.textContent = `Turns upkeep exceeded profit: ${turnsExceeded}`;
+        turnsExceededElement.textContent = `Upkeep > Profit limit left: ${turnsExceeded}`;
 
-        if (turnsExceeded >= 20) {
+        if (turnsExceeded = 0) {
             alert("Game Over: Upkeep has exceeded profit for 20 turns!");
             resetGame();
         }
