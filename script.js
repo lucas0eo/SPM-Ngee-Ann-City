@@ -15,7 +15,8 @@ document.addEventListener('DOMContentLoaded', function () {
     let currentGameMode = 'arcade';
     let selectedLetter = ''; // Variable to hold the currently selected letter
 
-
+    const demolishButton = document.createElement('button');
+    demolishButton.textContent = 'Demolish';
     function printBoard() {
         console.log("Printing board...");
         gridContainer.innerHTML = '';
@@ -44,7 +45,20 @@ document.addEventListener('DOMContentLoaded', function () {
                 cell.classList.add('grid-cell');
                 cell.textContent = board[r][c];
                 cell.addEventListener('click', function () {
-                    if (selectedLetter !== '' && board[r][c] === ' ') {
+                    if (demolishMode) {
+                        demolishBuilding(r, c);
+                        coins--
+                        coinsElement.textContent = coins
+                        demolishMode=false;
+                        check = isBoardEmpty();
+                        if (check === true){
+                            boardNotEmpty = false;
+                            console.log("HI")
+                        }
+                        demolishButton.classList.remove('highlight');
+
+                    }
+                    else if (selectedLetter !== '' && board[r][c] === ' ') {
                         if(!boardNotEmpty || isAdjacentOccupied(r, c)){
                             boardNotEmpty = true;
                             coins--;
@@ -110,6 +124,15 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
         return false;
+    }
+    function demolishBuilding(row, col) {
+        if (board[row][col] !== ' ') {
+            board[row][col] = ' ';
+            updatePoints();
+            printBoard();
+        }else{
+            alert('Cannot demolish an empty space!');
+        }
     }
 
     function countAdjacent(board, row, col, type) {
@@ -203,29 +226,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
     }
-    // document.getElementById('demolishCoord1').addEventListener('click', function () {
-    //     const demolish = document.getElementById('demolishCoord').value.trim();
-    //     demolishBuilding(demolish)
-    // });
-    // placeLetterForm.addEventListener('submit', function (e) {
-    //     e.preventDefault();
-    //     const coord = document.getElementById('coordinate').value.trim();
-    //     const letter = document.getElementById('letter').value.trim();
-    
-    //     const result = placeLetter(coord, letter);
-    //     if (result.bool) {
-    //         sessionStorage.setItem(FREE_PLAY_KEY, JSON.stringify({
-    //             score,
-    //             coins,
-    //             board
-    //         }));
-    //         sessionStorage.setItem(ARCADE_KEY, JSON.stringify({
-    //             score,
-    //             coins,
-    //             board
-    //         }));
-    //     }
-    // });
+
     function saveGame() {
         const check = localStorage.getItem('check')
         const fileName = prompt('Enter a file name to save the game:');
@@ -346,6 +347,7 @@ document.addEventListener('DOMContentLoaded', function () {
             letterSpan1.classList.toggle('selected-letter');
             letterSpan2.classList.remove('selected-letter');
             selectedLetter = letter1;
+            demolishMode = false;
         });
         const letterSpan2 = document.createElement('span');
         letterSpan2.textContent = letter2;
@@ -353,9 +355,20 @@ document.addEventListener('DOMContentLoaded', function () {
             letterSpan2.classList.toggle('selected-letter');
             letterSpan1.classList.remove('selected-letter');
             selectedLetter = letter2;
+            demolishMode = false;
         });
         stickyBar.appendChild(letterSpan1);
         stickyBar.appendChild(letterSpan2);
+        // Add demolish button
+        demolishButton.addEventListener('click', function () {
+            document.querySelectorAll('.selected-letter').forEach(el => el.classList.remove('selected-letter'));
+            demolishMode = true;
+            selectedLetter = '';
+            demolishButton.classList.add('highlight');
+
+        });
+        stickyBar.appendChild(demolishButton);
+
     }
 updateStickyBar()
  printBoard()

@@ -1,13 +1,19 @@
-
 document.addEventListener('DOMContentLoaded', function () {
-    let boardSize = 100;
+    let boardSize = 5;
     let board = Array.from({ length: boardSize }, () => Array(boardSize).fill(' '));
     let gridContainer = document.getElementById('grid');
-    let placeLetterForm = document.getElementById('placeLetterForm');
     let profitElement = document.getElementById('profit');
     let upkeepElement = document.getElementById('upkeep');
     let turnsExceededElement = document.getElementById('turnsExceeded');
     let referrer = sessionStorage.getItem('referrer');
+    let boardNotEmpty = false;
+
+    const stickyBar = document.getElementById('sticky-bar');
+    stickyBar.style.position = 'fixed';
+    stickyBar.style.bottom = '0';
+
+    let selectedLetter = ''; // Variable to hold the currently selected letter
+    let demolishMode = false; // Variable to track if demolish mode is active
 
     const FREE_PLAY_KEY = 'freePlayGridGameState';
     const ARCADE_KEY = 'arcadeGridGameState';
@@ -16,7 +22,8 @@ document.addEventListener('DOMContentLoaded', function () {
     let profit = 0;
     let upkeep = 0;
     let turnsExceeded = 0;
-
+    const demolishButton = document.createElement('button');
+    demolishButton.textContent = 'Demolish';
     function printBoard() {
         gridContainer.innerHTML = '';
         gridContainer.style.gridTemplateColumns = `repeat(${boardSize + 1}, 30px)`;
@@ -43,21 +50,35 @@ document.addEventListener('DOMContentLoaded', function () {
                 const cell = document.createElement('div');
                 cell.classList.add('grid-cell');
                 cell.textContent = board[r][c];
+                cell.addEventListener('click', function () {
+                    if (demolishMode) {
+                        demolishBuilding(r, c);
+                        demolishButton.classList.remove('highlight');
+                        demolishMode=false;
+                        check = isBoardEmpty();
+                        if (check === true){
+                            boardNotEmpty = false;
+                            console.log("HI")
+                        }
+                    } else if (selectedLetter !== '' && board[r][c] === ' ') {
+                        board[r][c] = selectedLetter;
+                        updateProfitAndUpkeep();
+                        updateStickyBar();
+                        printBoard();
+                        if (currentGameMode == 'arcade' && coins == 0) {
+                            alert(`Game Ended! Your score: ${score}`);
+                        }
+                    } else {
+                        alert('Please select a letter from the sticky bar.');
+                    }
+
+                    if (r === boardSize - 1 || c === boardSize - 1) {
+                        expandBoard();
+                        printBoard();
+                    }
+                });
                 gridContainer.appendChild(cell);
             }
-        }
-    }
-
-    function convertCoord(coord) {
-        const regex = /^([A-Za-z])(\d+)$/;
-        const match = coord.match(regex);
-        if (!match) return [null, null];
-        const row = match[1].toUpperCase().charCodeAt(0) - 65;
-        const col = parseInt(match[2], 10) - 1;
-        if (row >= 0 && row < boardSize && col >= 0 && col < boardSize) {
-            return [row, col];
-        } else {
-            return [null, null];
         }
     }
 
@@ -70,34 +91,30 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         boardSize += 5;
     }
-
-    function placeLetter(coord, letter) {
-        const [row, col] = convertCoord(coord);
-        if (row !== null && col !== null && board[row][col] === ' ') {
-            if (row === board.length - 1 || col === board[0].length - 1) {
-                expandBoard();
+    function isBoardEmpty() {
+        for (let r = 0; r < boardSize; r++) {
+            for (let c = 0; c < boardSize; c++) {
+                if (board[r][c] !== ' ') {
+                    return false;
+                }
             }
-            board[row][col] = letter;
-            updateProfitAndUpkeep();
-            return true;
         }
-        return false;
+        return true;
     }
-
-    function demolishBuilding(coord) {
-        const [row, col] = convertCoord(coord);
-        if (row !== null && col !== null && board[row][col] !== ' ') {
+    function demolishBuilding(row, col) {
+        if (board[row][col] !== ' ') {
             board[row][col] = ' ';
             updateProfitAndUpkeep();
-            return true;
+            printBoard();
+        }else{
+            alert('Cannot demolish an empty space!');
         }
-        return false;
     }
 
     function updateProfitAndUpkeep() {
         profit = 0;
         upkeep = 0;
-        console.log("P: ",profit ,"up: " ,upkeep)
+        console.log("P: ", profit, "up: ", upkeep)
         let residentialUpkeep = 0;
         let visited = Array.from({ length: boardSize }, () => Array(boardSize).fill(false));
 
@@ -106,7 +123,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 let building = board[r][c];
                 if (building === 'R' && !visited[r][c]) {
                     let clusterSize = findResidentialCluster(r, c, building, visited);
-                    console.log("Cluster Size: ",clusterSize);
+                    console.log("Cluster Size: ", clusterSize);
                     profit += clusterSize;
                     residentialUpkeep += 1;
                 }
@@ -126,16 +143,16 @@ document.addEventListener('DOMContentLoaded', function () {
                     case '*':
                         if (!isConnected(r, c)) {
                             upkeep += 1;
-                            console.log(upkeep)
+                            console.log(upkeep);
                         }
                         break;
                 }
             }
         }
 
-        console.log("Res Upkeep: ",residentialUpkeep)
+        console.log("Res Upkeep: ", residentialUpkeep);
         upkeep += residentialUpkeep;
-        console.log("P: ",profit ,"up: " ,upkeep)
+        console.log("P: ", profit, "up: ", upkeep);
         profitElement.textContent = `Profit: ${profit}`;
         upkeepElement.textContent = `Upkeep: ${upkeep}`;
 
@@ -211,50 +228,35 @@ document.addEventListener('DOMContentLoaded', function () {
         updateProfitAndUpkeep();
     }
 
-    placeLetterForm.addEventListener('submit', function (e) {
-        e.preventDefault();
-        const coord = e.target.coordinate.value.trim();
-        const letter = e.target.letter.value.trim().toUpperCase();
-
-        if (['O', 'I', 'C', '*', 'R'].includes(letter) && placeLetter(coord, letter)) {
-            printBoard();
-        } else {
-            alert('Invalid input or cell cannot be placed.');
-        }
-
-        e.target.coordinate.value = '';
-        e.target.letter.value = '';
-    });
-
     function saveGame() {
-        const check = localStorage.getItem('check')
+        const check = localStorage.getItem('check');
         const fileName = prompt('Enter a file name to save the game:');
-        if(fileName!==check){
-        if (!fileName) {
-            alert('File name cannot be empty!');
-            return;
+        if (fileName !== check) {
+            if (!fileName) {
+                alert('File name cannot be empty!');
+                return;
+            }
+            const gameState = {
+                mode: 'freePlay',
+                board,
+                boardSize,
+                profit,
+                upkeep,
+                turnsExceeded,
+            };
+            const saveKey = `${fileName}`;
+            localStorage.setItem('check', fileName);
+            localStorage.setItem(saveKey, JSON.stringify(gameState));
+            alert('Game saved!');
+            return true;
+        } else {
+            alert("Cannot have files with the same name");
+            return false;
         }
-        const gameState = {
-            mode: 'freePlay',
-            board,
-            boardSize,
-            profit,
-            upkeep,
-            turnsExceeded,
-        };
-        const saveKey = `${fileName}`;
-        localStorage.setItem('check',fileName)
-        localStorage.setItem(saveKey, JSON.stringify(gameState));
-        alert('Game saved!');
-        return true;
-    }else{
-        alert("Cannot have files with the same name")
-        return false;
-    }
     }
 
     function loadGame() {
-        const saveKey1 = localStorage.getItem('name')
+        const saveKey1 = localStorage.getItem('name');
         const gameState = JSON.parse(localStorage.getItem(saveKey1));
         // if (gameState.mode !== currentGameMode) {
         //     alert('Error: Trying to load a game from a different mode!');
@@ -272,41 +274,66 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    function isBoardEmpty() {
-        for (let r = 0; r < boardSize; r++) {
-            for (let c = 0; c < boardSize; c++) {
-                if (board[r][c] !== ' ') {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
     if (referrer === 'freePlayGame') {
         loadGame();
         sessionStorage.removeItem('referrer');
     }
+    // Adjust sticky bar based on scroll position
+    window.addEventListener('scroll', function () {
+        const gridRect = gridContainer.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
 
-    document.getElementById('saveGame').addEventListener('click', function () {
-        if (isBoardEmpty()) {
-            alert("Cannot save an empty board");
-            return;
+        if (gridRect.bottom < viewportHeight) {
+            stickyBar.style.removeProperty('position');
+            stickyBar.style.removeProperty('bottom');
         } else {
-            if(saveGame()){
-                fadeOutAndNavigate('mainpage.html');
-            }
-            sessionStorage.setItem('from','fp')
+            stickyBar.style.position = 'fixed';
+            stickyBar.style.bottom = '0';
         }
     });
 
-    document.getElementById('loadGame').addEventListener('click', function () {
-        loadGame();
+    document.getElementById('saveGame').addEventListener('click', function () {
+            if (saveGame()) {
+                fadeOutAndNavigate('mainpage.html');
+            }
+            sessionStorage.setItem('from', 'fp');
+        
     });
 
     document.getElementById('back').addEventListener('click', function () {
         fadeOutAndNavigate('mainpage.html');
     });
+
+    // Update sticky bar with random letters
+    function updateStickyBar() {
+        const letters = ['R', 'I', 'C', 'O', '*'];
+        stickyBar.innerHTML = ''; // Clear previous content
+
+        letters.forEach(letter => {
+            const letterSpan = document.createElement('span');
+            letterSpan.textContent = letter;
+            letterSpan.addEventListener('click', function () {
+                document.querySelectorAll('.selected-letter').forEach(el => el.classList.remove('selected-letter'));
+                letterSpan.classList.toggle('selected-letter');
+                selectedLetter = letter;
+                demolishMode = false;
+            });
+            stickyBar.appendChild(letterSpan);
+        });
+
+        // Add demolish button
+        // const demolishButton = document.createElement('button');
+        // demolishButton.textContent = 'Demolish';
+        demolishButton.addEventListener('click', function () {
+            document.querySelectorAll('.selected-letter').forEach(el => el.classList.remove('selected-letter'));
+            demolishMode = true;
+            selectedLetter = '';
+            //document.querySelectorAll('#sticky-bar button').forEach(btn => btn.classList.remove('selected-letter'));
+            demolishButton.classList.add('highlight');
+
+        });
+        stickyBar.appendChild(demolishButton);
+    }
 
     function fadeOutAndNavigate(targetUrl) {
         document.body.style.transition = "opacity 2s";
@@ -316,6 +343,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 2000);
     }
 
+    updateStickyBar();
     printBoard();
-    updateProfitAndUpkeep();
 });

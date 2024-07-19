@@ -7,57 +7,73 @@
     <title>Grid Game - Free Play Mode</title>
     <link rel="stylesheet" href="styles.css">
 </head>
-
 <body>
     <div class="container">
         <div id="menu">
-            <h2>Free Play Menu</h2>
-            <form id="placeLetterForm">
-                <label for="coordinate">Coordinate (e.g., A1):</label>
-                <input type="text" id="coordinate" name="coordinate">
-                <label for="letter">Letter (O, I, C, *, R):</label>
-                <input type="text" id="letter" name="letter" maxlength="1">
-                <button type="submit">Place Letter</button>
-            </form>
-            <div>
-                <button id="saveGame">Go home and save Game</button>
-                <button id="loadGame">Load Saved Game</button>
-                <button id="back">Quit game</button>
-            </div>
-        </div>
-        <div id="gameBoard">
-            <h2>Game Board</h2>
-            <div id="grid"></div>
-            <div id="status">
+            <h2>Free Play Game</h2>
+            <div id="gameInfo">
                 <p id="profit">Profit: 0</p>
                 <p id="upkeep">Upkeep: 0</p>
                 <p id="turnsExceeded">Turns upkeep exceeded profit: 0</p>
             </div>
+            <div id="gameBoard">
+                <div id="grid"></div>
+            </div>
+        </div>
+        
+        <!-- New container for buttons and sticky bar -->
+        <div class="center-container">
+            <div id="sticky-bar" class="sticky-bar"></div>
+            <button id="saveGame">Save Game</button>
+            <button id="back">Quit Game</button>
         </div>
     </div>
-    <script src="freeplay.js"></script>
-    <style>
-     body {
+</body>
+<script src="freeplay.js"></script>
+<style>
+    body {
         font-family: Arial, sans-serif;
     }
 
     .container {
         display: flex;
-        justify-content: space-between;
+        flex-direction: column;
+        align-items: center; /* Center child elements horizontally */
     }
 
     #menu {
-        width: 20%;
+        width: 100%;
+        max-width: 100%;
+        text-align: center;
     }
 
     #gameBoard {
-        width: 75%;
+        width: 100%;
+        display: flex;
+        justify-content: center; /* Center the grid container */
+        margin-top: 20px;
+        overflow: auto; /* Enable scrolling for overflow */
     }
 
     #grid {
         display: grid;
         gap: 2px;
-        margin-top: 20px;
+        text-align: center;
+        margin: 0 auto; 
+        overflow: auto; /* Enable scrolling for overflow */
+    }
+
+    .grid-header {
+        font-weight: bold;
+    }
+
+    .selected-letter {
+        background: rgb(237, 237, 148);
+        padding: 5px;
+        display: inline-flex; /* Use flexbox to align items */
+        justify-content: center; /* Center items horizontally */
+        align-items: center; /* Center items vertically */
+        text-align: center; /* Center text horizontally */
     }
 
     .grid-cell {
@@ -69,36 +85,63 @@
         font-size: 20px;
     }
 
-    .grid-header {
+    /* Styling for the sticky bar */
+    #sticky-bar {
+        width: 70%;
+        height: 100px;
+        background: #f0f0f0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        border-radius: 5px;
+        font-size: 24px; /* Adjust the font size as needed */
+        color: #000; /* Black color */
+        letter-spacing: 50px; /* Adjust letter spacing as needed */
+        margin-bottom: 20px; /* Add margin at the bottom to separate from buttons */
+    }
+
+    .box {
+        width: 200px;
+        height: 200px;
+        background-color: #f0f0f0;
+        margin: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    /* Centering container */
+    .center-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+    }
+
+    /* Styling for game information */
+    #gameInfo {
+        background-color: #f0f0f0;
+        margin: 0;
         font-weight: bold;
     }
 
-    #placeLetterForm {
-        display: flex;
-        flex-direction: column;
+    #gameInfo span {
+        margin-left: 5px;
     }
 
-    .form-group {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 10px;
+    /* Centering buttons */
+    #saveGame, #back {
+        width: 150px;
+        margin: 10px;
+        padding: 10px;
+        font-size: 16px;
+        cursor: pointer;
     }
-
-    .form-group label {
-        flex: 1;
+    .highlight {
+        background:rgb(237, 237, 148);
+        border: 15px rgb(237, 237, 148);
     }
-
-    .form-group input {
-        flex: 2;
-    }
-
-    #placeLetterForm button {
-        margin-top: 10px;
-    }
-
-
-    </style>
-</body>
+</style>
 
 </html>
