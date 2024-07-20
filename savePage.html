@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Stencil+Text:wght@600&family=Saira+Stencil+One&display=swap" rel="stylesheet">
+    <title>Save Data Viewer</title>
+    <style>
+         body {
+            background-color: rgb(33, 40, 39);
+        }
+        .wrapper {
+            width: 90%;
+            margin: 0 auto;
+        }
+        .save-data-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start; /* Aligns children to the left */
+            width: 100%;
+        }
+        .save-data-rectangle {
+            display: flex; /* Flexbox for side-by-side layout */
+            flex-direction: row; /* Align items in a row */
+            align-items: flex-start; /* Align items at the top */
+            border-radius: 5px;
+            background-color: rgb(51, 228, 151);
+            padding: 10px;
+            margin: 10px 0;
+            width: 100%;
+            box-sizing: border-box;
+            font-family: "Saira Stencil One", sans-serif;
+            font-weight: 400;
+            font-style: normal;
+            font-size: 20px;
+        }
+        .info-section {
+            flex: 1; /* Takes up space on the left side */
+            display: flex;
+            flex-direction: column; /* Stack text items vertically */
+        }
+        .grid-section {
+            display: flex; /* Flexbox for grid layout */
+            flex-direction: column; /* Stack grid items vertically */
+            margin-left: 700px; /* Space between the text and grid */
+        }
+        .save-data-rectangle:hover {
+            transform: scale(1.05); /* Slightly increase size on hover */
+        }
+        .back-button {
+            font-family: "Saira Stencil One", sans-serif;
+            font-weight: 400;
+            font-style: normal;
+            font-size: 25px;
+            display: block;
+            margin: 20px 0;
+            padding: 10px 20px;
+            background-color: rgb(51, 228, 151);
+            color: black;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 5px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .container {
+            padding: 16px;
+            margin-bottom: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .grid {
+            display: grid;
+            gap: 4px;
+        }
+        .grid-cell {
+            font-size: 10px;
+            width: 10px;
+            height: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #000;
+            background-color: white; /* Make grid cells visible */
+        }
+        .delete-button {
+            background-color: rgb(255, 0, 0); /* Red background for delete button */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-family: "Saira Stencil One", sans-serif;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        .delete-button:hover {
+            background-color: rgb(200, 0, 0); /* Darker red on hover */
+        }
+    </style>
+</head>
+<body>
+    <div class = "wrapper">
+    <div id="saveDataContainer" class="save-data-container"></div>
+    <a class="back-button" id = 'back'>Back to Main Page</a>
+    </div>
+
+
+    <script>
+        document.getElementById('back').addEventListener('click', function () {
+        fadeOutAndNavigate('mainpage.html');
+        });
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log(localStorage)
+            const saveDataContainer = document.getElementById('saveDataContainer');
+            const saveKeys = Object.keys(localStorage).filter(key => key!=='check' && key !== 'selectedGameMode');
+            console.log(saveKeys)
+            saveKeys.forEach(key => {
+                let saveData;
+                try {
+                    saveData = JSON.parse(localStorage.getItem(key));
+                    console.log(saveData)
+                    // Create a new div for the save data rectangle
+                    const saveDataRectangle = document.createElement('div');
+                    saveDataRectangle.classList.add('save-data-rectangle');
+                    if (saveData.mode == 'arcade'){
+
+                    const infoSection = document.createElement('div');
+                    infoSection.classList.add('container');
+                    // mode 
+                    const modeName = document.createElement('p');
+                    modeName.textContent = `Mode Name: ${saveData.mode}`;
+                    infoSection.appendChild(modeName);
+                    //filename
+                    const fileName = document.createElement('p');
+                    fileName.textContent = `File Name: ${key}`;
+                    infoSection.appendChild(fileName);
+
+                    const points = document.createElement('p');
+                    points.textContent = `Score: ${saveData.score}`;
+                    infoSection.appendChild(points);
+
+                    const coins = document.createElement('p');
+                    coins.textContent = `Coins: ${saveData.coins}`;
+                    infoSection.appendChild(coins);
+
+                    saveDataRectangle.appendChild(infoSection);
+
+                    // Create the grid section
+                    const gridSection = document.createElement('div');
+                    gridSection.classList.add('grid-section');
+
+                    const gridContainer = document.createElement('div');
+                    gridContainer.classList.add('grid');
+                    gridContainer.style.gridTemplateColumns = `repeat(${saveData.boardSize || saveData.board[0].length}, 10px)`;
+
+                    saveData.board.forEach(row => {
+                        row.forEach(cell => {
+                            const cellElement = document.createElement('div');
+                            cellElement.classList.add('grid-cell');
+                            cellElement.textContent = cell;
+                            gridContainer.appendChild(cellElement);
+                        });
+                    });
+                    // Create and append the delete button
+                    const deleteButton = document.createElement('button');
+                    deleteButton.classList.add('delete-button');
+                    deleteButton.textContent = 'Delete Save';
+                    deleteButton.addEventListener('click', () => {
+                        event.stopPropagation(); // Prevent click event from propagating to saveDataRectangle
+                        if (confirm('Are you sure you want to delete this save file?')) {
+                            localStorage.removeItem(key);
+                            saveDataContainer.removeChild(saveDataRectangle);
+                        }
+                    });
+                    infoSection.appendChild(deleteButton)
+                    gridSection.appendChild(gridContainer);
+                    saveDataRectangle.appendChild(gridSection);
+                    // Append the rectangle to the container
+                    saveDataContainer.appendChild(saveDataRectangle);
+
+
+
+                    } else if(saveData.mode == 'freePlay'){
+
+                    const infoSection = document.createElement('div');
+                    infoSection.classList.add('container');
+                    // mode 
+                    const modeName = document.createElement('p');
+                    modeName.textContent = `Mode Name: ${saveData.mode}`;
+                    infoSection.appendChild(modeName);
+                    //filename
+                    const fileName = document.createElement('p');
+                    fileName.textContent = `File Name: ${key}`;
+                    infoSection.appendChild(fileName);
+
+                    const points = document.createElement('p');
+                    points.textContent = `Profit: ${saveData.profit}`;
+                    infoSection.appendChild(points);
+
+                    const coins = document.createElement('p');
+                    coins.textContent = `Upkeep: ${saveData.upkeep}`;
+                    infoSection.appendChild(coins);
+
+
+                    saveDataRectangle.appendChild(infoSection);
+
+                    // Create the grid section
+                    const gridSection = document.createElement('div');
+                    gridSection.classList.add('grid-section');
+
+                    const gridContainer = document.createElement('div');
+                    gridContainer.classList.add('grid');
+                    gridContainer.style.gridTemplateColumns = `repeat(${saveData.boardSize || saveData.board[0].length}, 10px)`;
+
+                    saveData.board.forEach(row => {
+                        row.forEach(cell => {
+                            const cellElement = document.createElement('div');
+                            cellElement.classList.add('grid-cell');
+                            cellElement.textContent = cell;
+                            gridContainer.appendChild(cellElement);
+                        });
+                    });
+                    // Create and append the delete button
+                    const deleteButton = document.createElement('button');
+                    deleteButton.classList.add('delete-button');
+                    deleteButton.textContent = 'Delete Save';
+                    deleteButton.addEventListener('click', () => {
+                        event.stopPropagation(); // Prevent click event from propagating to saveDataRectangle
+                        if (confirm('Are you sure you want to delete this save file?')) {
+                            localStorage.removeItem(key);
+                            saveDataContainer.removeChild(saveDataRectangle);
+                            console.log("HIHHI")
+                            console.log(localStorage)
+                        }
+                    });
+                    infoSection.appendChild(deleteButton)
+                    gridSection.appendChild(gridContainer);
+                    saveDataRectangle.appendChild(gridSection);
+                    // Append the rectangle to the container
+                    saveDataContainer.appendChild(saveDataRectangle);
+
+                    }
+
+                    saveDataRectangle.addEventListener('click', () => {
+                        if (saveData.mode == 'arcade'){
+                            sessionStorage.setItem('referrer', 'arcadeGame')
+                            fadeOutAndNavigate('game.html')
+                        } else if (saveData.mode == 'freePlay'){
+                            sessionStorage.setItem('referrer', 'freePlayGame')
+                            fadeOutAndNavigate('freeplay.html')
+                        }
+                    });
+                } catch (e) {
+                    console.error(`Error parsing data for key ${key}:`, e);
+                    return;
+                }
+            });
+        });
+
+        function fadeOutAndNavigate(targetUrl) {
+        document.body.style.transition = "opacity 2s";
+        document.body.style.opacity = "0";
+        setTimeout(function () {
+            window.location.href = targetUrl;
+        }, 2000);
+    }
+    </script>
+</body>
+</html>
+

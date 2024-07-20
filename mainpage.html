@@ -138,40 +138,41 @@
     </div>
 </div>
 <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log(localStorage)
+    });
        document.getElementById('newGameContainer').addEventListener('click', function () {
-        console.log("HIHI")
         fadeOutAndNavigate('options.html');
         });
        document.getElementById('continueContainer').addEventListener('click', function () {
-        const selectGM = localStorage.getItem('selectedGameMode')
-        const file = prompt('Enter the file name to load the game:');
-        localStorage.setItem('name',file)
-        const from = sessionStorage.getItem('from')
-        if (!file) {
-            alert('File name cannot be empty!');
-            window.location.href = 'mainpage.html';
-            return;
-        }
-        function Game() {
-        if (from === 'a') {
-            sessionStorage.setItem('referrer', 'arcadeGame')
-            fadeOutAndNavigate('game.html')
-        }
-        else if(from === 'fp'){
-            sessionStorage.setItem('referrer', 'freePlayGame')
-            fadeOutAndNavigate('freeplay.html')
-        }
-        else{
-            const storedFile = localStorage.getItem(file);
-            if (storedFile === null){
-            console.log("File not found or file is not the most recent file")
-            window.location.href = 'mainpage.html';
-            return
-            }
-        }
+        fadeOutAndNavigate('savePage.html');
+        // const selectGM = localStorage.getItem('selectedGameMode')
+        // const file = prompt('Enter the file name to load the game:');
+        // localStorage.setItem('name',file)
+        // const from = sessionStorage.getItem('from')
+        // if (!file) {
+        //     alert('File name cannot be empty!');
+        //     window.location.href = 'mainpage.html';
+        //     return;
+        // }
+        // function Game() {
+        // if (from === 'a') {
+        //     sessionStorage.setItem('referrer', 'arcadeGame')
+        //     fadeOutAndNavigate('game.html')
+        // }
+        // else if(from === 'fp'){
+        //     sessionStorage.setItem('referrer', 'freePlayGame')
+        //     fadeOutAndNavigate('freeplay.html')
+        // }
+        // else{
+        //     const storedFile = localStorage.getItem(file);
+        //     if (storedFile === null){
+        //     console.log("File not found or file is not the most recent file")
+        //     window.location.href = 'mainpage.html';
+        //     return
+        //     }
+        // }
         
-    }
-    Game();
     });
 
     document.getElementById('leaderboardContainer').addEventListener('click', function () {

@@ -227,34 +227,44 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function saveGame() {
-        const check = localStorage.getItem('check');
         const fileName = prompt('Enter a file name to save the game:');
-        if (fileName !== check) {
-            if (!fileName) {
-                alert('File name cannot be empty!');
-                return;
-            }
-            const gameState = {
-                mode: 'freePlay',
-                board,
-                boardSize,
-                profit,
-                upkeep,
-                turnsExceeded,
-            };
-            const saveKey = `${fileName}`;
-            localStorage.setItem('check', fileName);
-            localStorage.setItem(saveKey, JSON.stringify(gameState));
-            alert('Game saved!');
-            return true;
-        } else {
-            alert("Cannot have files with the same name");
+        
+        if (!fileName) {
+            alert('File name cannot be empty!');
             return false;
         }
+        
+        const check = localStorage.getItem('check');
+        const saveKey = `${fileName}`;
+        
+        // Check if file name already exists and is different from the current save
+        if (localStorage.getItem(saveKey) && fileName !== check) {
+            if (!confirm("A file with this name already exists. Do you want to overwrite it?")) {
+                return false; // Exit if user chooses not to overwrite
+            }
+        }
+    
+        // Save the game state
+        const gameState = {
+            mode: 'freePlay',
+            board,
+            boardSize,
+            profit,
+            upkeep,
+            turnsExceeded,
+        };
+        
+        localStorage.setItem('check', fileName); // Update the 'check' entry to the new file name
+        localStorage.setItem(saveKey, JSON.stringify(gameState)); // Save or overwrite the file
+        
+        alert('Game saved!');
+        return true;
     }
+    
+
 
     function loadGame() {
-        const saveKey1 = localStorage.getItem('name');
+        const saveKey1 = localStorage.getItem('check');
         const gameState = JSON.parse(localStorage.getItem(saveKey1));
         // if (gameState.mode !== currentGameMode) {
         //     alert('Error: Trying to load a game from a different mode!');
