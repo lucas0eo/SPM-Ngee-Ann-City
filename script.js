@@ -47,45 +47,45 @@ document.addEventListener('DOMContentLoaded', function () {
                 cell.addEventListener('click', function () {
                     if (demolishMode) {
                         demolishBuilding(r, c);
-                        coins--
-                        coinsElement.textContent = coins
-                        demolishMode=false;
+                        coins--;
+                        coinsElement.textContent = coins;
+                        demolishMode = false;
                         check = isBoardEmpty();
-                        if (check === true){
+                        if (check === true) {
                             boardNotEmpty = false;
-                            console.log("HI")
+                            console.log("HI");
                         }
                         demolishButton.classList.remove('highlight');
-
-                    }
-                    else if (selectedLetter !== '' && board[r][c] === ' ') {
-                        if(!boardNotEmpty || isAdjacentOccupied(r, c)){
+                    } else if (board[r][c] === ' ') { // Check if the cell is empty first
+                        if (!isPlaceable(r, c)) {
+                            alert("You can only build on squares that are connected to existing buildings.");
+                        } else if (selectedLetter === '') {
+                            alert('Please select a letter from the sticky bar.');
+                        } else {
                             boardNotEmpty = true;
                             coins--;
                             board[r][c] = selectedLetter;
-                            pointsElement.textContent = score; // Update points display
-                            coinsElement.textContent = coins; // Update coins display
+                            pointsElement.textContent = score;
+                            coinsElement.textContent = coins;
                             updatePoints();
                             updateStickyBar();
                             printBoard();
                             // Check if arcade / free mode should end after placing this letter
-                            if (currentGameMode == 'arcade'){
-                                if (coins == 0){
+                            if (currentGameMode == 'arcade') {
+                                if (coins == 0 || !boardNotEmpty) {
                                     alert(`Game Ended! Your score: ${score}`);
                                 }
-                            } 
-                        } else{
-                            alert("Letter must be placed adjacent to a previously placed letter.");
+                            }
                         }
                     } else {
-                        alert('Please select a letter from the sticky bar.');
+                        alert("This cell is already occupied.");
                     }
                 });
                 gridContainer.appendChild(cell);
             }
         }
+        highlightPlaceableCells();
     }
-
     //  function demolishBuilding(coord) {
     //     const [row, col] = convertCoord(coord);
     //     if (row !== null && col !== null && board[row][col] !== ' ') {
@@ -265,6 +265,7 @@ document.addEventListener('DOMContentLoaded', function () {
             upkeep = gameState.upkeep;
             turnsExceeded = gameState.turnsExceeded;
             printBoard();
+             highlightPlaceableCells();
             alert('Game loaded!');
         }
     }
@@ -370,11 +371,44 @@ document.addEventListener('DOMContentLoaded', function () {
         stickyBar.appendChild(demolishButton);
 
     }
+    // Highlight Placeable tiles
+    function isPlaceable(row, col) {
+        if (!boardNotEmpty) {
+            return true; // First building can be placed anywhere
+        }
+        return isAdjacentOccupied(row, col);
+    }
+
+    function highlightPlaceableCells() {
+        const cells = document.querySelectorAll('.grid-cell');
+        cells.forEach((cell, index) => {
+            const row = Math.floor(index / boardSize);
+            const col = index % boardSize;
+            if (board[row][col] === ' ' && isPlaceable(row, col)) {
+                cell.classList.add('placeable');
+            } else {
+                cell.classList.remove('placeable');
+            }
+        });
+    }
+
+    async function UpdateLeaderBoard(){
+        const APIKEY = '6598fa970b0868856f232bcb';
+        const settings_Post = { // seting to post 
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-apikey": APIKEY,
+              "Cache-Control": "no-cache"
+            }}
+    }
 updateStickyBar()
  printBoard()
     
-
 });
+
+
+
 
 
 
