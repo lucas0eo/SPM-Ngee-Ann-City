@@ -47,7 +47,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 cell.textContent = board[r][c];
                 cell.addEventListener('click', function () {
                     if (demolishMode) {
-                        // ... (demolish logic remains unchanged)
+                        demolishBuilding(r, c);
+                        demolishButton.classList.remove('highlight');
+                        demolishMode=false;
+                        check = isBoardEmpty();
+                        if (check === true){
+                            boardNotEmpty = false;
+                            console.log("HI")
+                        }
                     } else if (board[r][c] === ' ') {
                         if (!isPlaceable(r, c)) {
                             alert("You can only build on squares that are connected to existing buildings.");
