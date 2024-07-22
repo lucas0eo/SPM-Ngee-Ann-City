@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let score = 0;
     let profit = 0;
     let upkeep = 0;
-    let turnsExceeded = 0;
+    let turnsExceeded = 20;
     const demolishButton = document.createElement('button');
     demolishButton.textContent = 'Demolish';
     function printBoard() {
@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded', function () {
         score = 0;
         let residentialUpkeep = 0;
         let visited = Array.from({ length: boardSize }, () => Array(boardSize).fill(false));
-    
+
         for (let r = 0; r < boardSize; r++) {
             for (let c = 0; c < boardSize; c++) {
                 let building = board[r][c];
@@ -163,13 +163,18 @@ document.addEventListener('DOMContentLoaded', function () {
     
         if (upkeep > profit) {
             turnsExceeded--;
+            if (turnsExceeded > 0) {
+                turnsExceededElement.textContent = `Upkeep > Profit: ${turnsExceeded} turns left`;
+            }
+        } else {
+            // Reset the count if profit is greater than or equal to upkeep
+            turnsExceeded = 20;
+            turnsExceededElement.textContent = ''; // Clear the message
         }
     
-        turnsExceededElement.textContent = `Upkeep > Profit limit left: ${turnsExceeded}`;
-    
-        if (turnsExceeded === 0) {
-            alert(`Game Over: Upkeep has exceeded profit for 20 turns! Final Score: ${score}`);
-            resetGame();
+        if (endGameIfNeeded()) {
+            // Game has ended, handle accordingly
+            return;
         }
     }
 
@@ -230,6 +235,7 @@ document.addEventListener('DOMContentLoaded', function () {
         score = 0;
         printBoard();
         updateProfitAndUpkeep();
+        turnsExceededElement.textContent = ''; // Clear the message
     }
 
     function saveGame() {
@@ -411,6 +417,82 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
         return roadCount;
+    }
+
+    function endGameIfNeeded() {
+        if (turnsExceeded === 0) {
+            alert(`Game Over: Upkeep has exceeded profit for 20 turns! Final Score: ${score}`);
+            UpdateLeaderBoard(score);
+            resetGame();
+            return true;
+        }
+        return false;
+    }
+
+    async function UpdateLeaderBoard(score) {
+        const APIKEY = '6598fa970b0868856f232bcb';
+        const settings = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "x-apikey": APIKEY,
+                "Cache-Control": "no-cache"
+            }
+        };
+    
+        try {
+            const response = await fetch("https://frontenddev-975b.restdb.io/rest/ngee-ann-city-leaderboard", settings);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            const data = await response.json();
+            console.log("Fetched leaderboard data:", data);
+    
+            // Filter data where mode is "freeplay"
+            const freeplayEntries = data.filter(entry => entry.mode === "freeplay");
+    
+            // Sort freeplayEntries from highest to lowest score
+            freeplayEntries.sort((a, b) => b.score - a.score);
+    
+            // Check if the new score is high enough to be in the top 10
+            const isTopScore = freeplayEntries.length < 10 || score > freeplayEntries[9].score;
+    
+            if (isTopScore) {
+                // Prompt for username
+                const username = prompt("Congratulations! You've made it to the top 10. Please enter your name:");
+                
+                if (username) {
+                    const newEntry = {
+                        username: username,
+                        score: score,
+                        mode: "freeplay"
+                    };
+    
+                    const settings_Post = {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "x-apikey": APIKEY,
+                            "Cache-Control": "no-cache"
+                        },
+                        body: JSON.stringify(newEntry)
+                    };
+    
+                    const postResponse = await fetch("https://frontenddev-975b.restdb.io/rest/ngee-ann-city-leaderboard", settings_Post);
+                    if (!postResponse.ok) {
+                        throw new Error('Error updating leaderboard');
+                    }
+    
+                    alert("Your score has been added to the leaderboard!");
+                    fadeOutAndNavigate('mainpage.html');
+                }
+            } else {
+                alert("Great game! Unfortunately, your score didn't make it to the top 10 this time.");
+            }
+    
+        } catch (error) {
+            console.error("There was a problem updating the leaderboard:", error);
+        }
     }
 
     updateStickyBar();
