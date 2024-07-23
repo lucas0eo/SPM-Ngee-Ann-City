@@ -1,6 +1,7 @@
+//Arcade.js
 document.addEventListener('DOMContentLoaded', function () {
     let score = 0;
-    let coins = 16;
+    let coins = 2;
     let boardSize = 20;
     const stickyBar = document.getElementById('sticky-bar');
     stickyBar.style.position = 'fixed';
@@ -47,45 +48,45 @@ document.addEventListener('DOMContentLoaded', function () {
                 cell.addEventListener('click', function () {
                     if (demolishMode) {
                         demolishBuilding(r, c);
-                        coins--
-                        coinsElement.textContent = coins
+                        demolishButton.classList.remove('highlight');
                         demolishMode=false;
                         check = isBoardEmpty();
                         if (check === true){
                             boardNotEmpty = false;
                             console.log("HI")
                         }
-                        demolishButton.classList.remove('highlight');
-
-                    }
-                    else if (selectedLetter !== '' && board[r][c] === ' ') {
-                        if(!boardNotEmpty || isAdjacentOccupied(r, c)){
+                    } else if (board[r][c] === ' ') {
+                        if (!isPlaceable(r, c)) {
+                            alert("You can only build on squares that are connected to existing buildings.");
+                        } else if (selectedLetter === '') {
+                            alert('Please select a letter from the sticky bar.');
+                        } else {
+                            // Check if the game should end before placing the building
+                            if (endGameIfNeeded()) {
+                                return; // Exit the function if the game has ended
+                            }
+                
                             boardNotEmpty = true;
                             coins--;
                             board[r][c] = selectedLetter;
-                            pointsElement.textContent = score; // Update points display
-                            coinsElement.textContent = coins; // Update coins display
+                            pointsElement.textContent = score;
+                            coinsElement.textContent = coins;
                             updatePoints();
                             updateStickyBar();
                             printBoard();
-                            // Check if arcade / free mode should end after placing this letter
-                            if (currentGameMode == 'arcade'){
-                                if (coins == 0){
-                                    alert(`Game Ended! Your score: ${score}`);
-                                }
-                            } 
-                        } else{
-                            alert("Letter must be placed adjacent to a previously placed letter.");
+                
+                            // Check again if the game should end after placing the building
+                            endGameIfNeeded();
                         }
                     } else {
-                        alert('Please select a letter from the sticky bar.');
+                        alert("This cell is already occupied.");
                     }
                 });
                 gridContainer.appendChild(cell);
             }
         }
+        highlightPlaceableCells();
     }
-
     //  function demolishBuilding(coord) {
     //     const [row, col] = convertCoord(coord);
     //     if (row !== null && col !== null && board[row][col] !== ' ') {
@@ -265,6 +266,7 @@ document.addEventListener('DOMContentLoaded', function () {
             upkeep = gameState.upkeep;
             turnsExceeded = gameState.turnsExceeded;
             printBoard();
+             highlightPlaceableCells();
             alert('Game loaded!');
         }
     }
@@ -277,6 +279,18 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
         return true;
+    }
+
+
+    function isBoardFull() {
+        for (let r = 0; r < boardSize; r++) {
+            for (let c = 0; c < boardSize; c++) {
+                if (board[r][c] === ' ') {
+                    return false; // Found an empty space, board is not full
+                }
+            }
+        }
+        return true; // No empty spaces found, board is full
     }
 
 
@@ -324,6 +338,15 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
         
+        function endGameIfNeeded() {
+            if (currentGameMode == 'arcade' && (coins <= 0 || isBoardFull())) {
+                console.log("Game ending. Score:", score);
+                alert(`Game Ended! Your score: ${score}`);
+                UpdateLeaderBoard(score);
+                return true; // Game has ended
+            }
+            return false; // Game continues
+        }
     // Function to get 2 random letters from an array of 5 letters
     function getRandomLetters() {
         const letters = ['R', 'I', 'C', 'O', '*']; // Array of 5 letters
@@ -370,11 +393,100 @@ document.addEventListener('DOMContentLoaded', function () {
         stickyBar.appendChild(demolishButton);
 
     }
+    // Highlight Placeable tiles
+    function isPlaceable(row, col) {
+        if (!boardNotEmpty) {
+            return true; // First building can be placed anywhere
+        }
+        return isAdjacentOccupied(row, col);
+    }
+
+    function highlightPlaceableCells() {
+        const cells = document.querySelectorAll('.grid-cell');
+        cells.forEach((cell, index) => {
+            const row = Math.floor(index / boardSize);
+            const col = index % boardSize;
+            if (board[row][col] === ' ' && isPlaceable(row, col)) {
+                cell.classList.add('placeable');
+            } else {
+                cell.classList.remove('placeable');
+            }
+        });
+    }
+
+   async function UpdateLeaderBoard(score) {
+    const APIKEY = '6598fa970b0868856f232bcb';
+    const settings = {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+            "x-apikey": APIKEY,
+            "Cache-Control": "no-cache"
+        }
+    };
+
+    try {
+        const response = await fetch("https://frontenddev-975b.restdb.io/rest/ngee-ann-city-leaderboard", settings);
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+        console.log("Fetched leaderboard data:", data);
+
+        // Filter data where mode is "arcade"
+        const arcadeEntries = data.filter(entry => entry.mode === "arcade");
+
+        // Sort arcadeEntries from highest to lowest score
+        arcadeEntries.sort((a, b) => b.score - a.score);
+
+        // Check if the new score is high enough to be in the top 10
+        const isTopScore = arcadeEntries.length < 10 || score > arcadeEntries[9].score;
+
+        if (isTopScore) {
+            // Prompt for username
+            const username = prompt("Congratulations! You've made it to the top 10. Please enter your name:");
+            
+            if (username) {
+                const newEntry = {
+                    username: username,
+                    score: score,
+                    mode: "arcade"
+                };
+
+                const settings_Post = {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "x-apikey": APIKEY,
+                        "Cache-Control": "no-cache"
+                    },
+                    body: JSON.stringify(newEntry)
+                };
+
+                const postResponse = await fetch("https://frontenddev-975b.restdb.io/rest/ngee-ann-city-leaderboard", settings_Post);
+                if (!postResponse.ok) {
+                    throw new Error('Error updating leaderboard');
+                }
+
+                alert("Your score has been added to the leaderboard!");
+                fadeOutAndNavigate('mainpage.html');
+            }
+        } else {
+            alert("Great game! Unfortunately, your score didn't make it to the top 10 this time.");
+        }
+
+    } catch (error) {
+        console.error("There was a problem updating the leaderboard:", error);
+    }
+}
+
 updateStickyBar()
  printBoard()
     
-
 });
+
+
+
 
 
 

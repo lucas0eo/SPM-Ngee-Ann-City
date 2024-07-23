@@ -109,3 +109,8 @@ body {
     background:rgb(237, 237, 148);
     border: 15px rgb(237, 237, 148);
 }
+
+.placeable {
+    background-color: #90EE90; /* Light green */
+}
+
