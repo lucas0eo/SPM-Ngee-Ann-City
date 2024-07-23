@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let profit = 0;
     let upkeep = 0;
-    let turnsExceeded = 0;
+    let turnsExceeded = 20;
     const demolishButton = document.createElement('button');
     demolishButton.textContent = 'Demolish';
     function printBoard() {
