@@ -1,3 +1,4 @@
+//Freeplay
 document.addEventListener('DOMContentLoaded', function () {
     let boardSize = 5;
     let board = Array.from({ length: boardSize }, () => Array(boardSize).fill(' '));
@@ -5,6 +6,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let profitElement = document.getElementById('profit');
     let upkeepElement = document.getElementById('upkeep');
     let turnsExceededElement = document.getElementById('turnsExceeded');
+    const scoreElement = document.getElementById('score');
     let referrer = sessionStorage.getItem('referrer');
     let boardNotEmpty = false;
 
@@ -19,9 +21,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const ARCADE_KEY = 'arcadeGridGameState';
     let currentGameMode = 'freePlay';
 
+    let score = 0;
     let profit = 0;
     let upkeep = 0;
-    let turnsExceeded = 0;
+    let turnsExceeded = 20;
     const demolishButton = document.createElement('button');
     demolishButton.textContent = 'Demolish';
     function printBoard() {
@@ -114,7 +117,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function updateProfitAndUpkeep() {
         profit = 0;
         upkeep = 0;
-        console.log("P: ", profit, "up: ", upkeep)
+        score = 0;
         let residentialUpkeep = 0;
         let visited = Array.from({ length: boardSize }, () => Array(boardSize).fill(false));
 
@@ -123,48 +126,55 @@ document.addEventListener('DOMContentLoaded', function () {
                 let building = board[r][c];
                 if (building === 'R' && !visited[r][c]) {
                     let clusterSize = findResidentialCluster(r, c, building, visited);
-                    console.log("Cluster Size: ", clusterSize);
                     profit += clusterSize;
                     residentialUpkeep += 1;
+                    score += calculateResidentialScore(board, r, c);
                 }
-
+    
                 switch (building) {
                     case 'I':
                         profit += 2;
                         upkeep += 1;
+                        score += calculateIndustryScore(board, r, c);
                         break;
                     case 'C':
                         profit += 3;
                         upkeep += 2;
+                        score += calculateCommercialScore(board, r, c);
                         break;
                     case 'O':
                         upkeep += 1;
+                        score += calculateParkScore(board, r, c);
                         break;
                     case '*':
                         if (!isConnected(r, c)) {
                             upkeep += 1;
-                            console.log(upkeep);
                         }
+                        score += calculateRoadScore(board, r, c);
                         break;
                 }
             }
         }
-
-        console.log("Res Upkeep: ", residentialUpkeep);
+    
         upkeep += residentialUpkeep;
-        console.log("P: ", profit, "up: ", upkeep);
         profitElement.textContent = `Profit: ${profit}`;
         upkeepElement.textContent = `Upkeep: ${upkeep}`;
-
+        scoreElement.textContent = `Score: ${score}`;
+    
         if (upkeep > profit) {
             turnsExceeded--;
+            if (turnsExceeded > 0) {
+                turnsExceededElement.textContent = `Upkeep > Profit: ${turnsExceeded} turns left`;
+            }
+        } else {
+            // Reset the count if profit is greater than or equal to upkeep
+            turnsExceeded = 20;
+            turnsExceededElement.textContent = ''; // Clear the message
         }
-
-        turnsExceededElement.textContent = `Upkeep > Profit limit left: ${turnsExceeded}`;
-
-        if (turnsExceeded = 0) {
-            alert("Game Over: Upkeep has exceeded profit for 20 turns!");
-            resetGame();
+    
+        if (endGameIfNeeded()) {
+            // Game has ended, handle accordingly
+            return;
         }
     }
 
@@ -221,9 +231,11 @@ document.addEventListener('DOMContentLoaded', function () {
         boardSize = 5;
         profit = 0;
         upkeep = 0;
-        turnsExceeded = 0;
+        turnsExceeded = 20;
+        score = 0;
         printBoard();
         updateProfitAndUpkeep();
+        turnsExceededElement.textContent = ''; // Clear the message
     }
 
     function saveGame() {
@@ -252,6 +264,7 @@ document.addEventListener('DOMContentLoaded', function () {
             profit,
             upkeep,
             turnsExceeded,
+            score,
         };
         
         localStorage.setItem('check', fileName); // Update the 'check' entry to the new file name
@@ -276,6 +289,7 @@ document.addEventListener('DOMContentLoaded', function () {
             profit = gameState.profit;
             upkeep = gameState.upkeep;
             turnsExceeded = gameState.turnsExceeded;
+            score = gameState.score || 0; // Default to 0 if not present in older saves
             printBoard();
             updateProfitAndUpkeep();
             alert('Game loaded!');
@@ -349,6 +363,136 @@ document.addEventListener('DOMContentLoaded', function () {
         setTimeout(function () {
             window.location.href = targetUrl;
         }, 2000);
+    }
+
+    //Point logic
+    function countAdjacent(board, row, col, type) {
+        const directions = [
+            [-1, 0], [1, 0], [0, -1], [0, 1],
+            [-1, -1], [-1, 1], [1, -1], [1, 1]
+        ];
+        let count = 0;
+        for (const [dr, dc] of directions) {
+            const newRow = row + dr;
+            const newCol = col + dc;
+            if (newRow >= 0 && newRow < boardSize && newCol >= 0 && newCol < boardSize) {
+                if (board[newRow][newCol] === type) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+    
+    function calculateResidentialScore(board, row, col) {
+        let adjacentIndustryCount = countAdjacent(board, row, col, 'I');
+        let adjacentResidentialCount = countAdjacent(board, row, col, 'R');
+        let adjacentCommercialCount = countAdjacent(board, row, col, 'C');
+        let adjacentParkCount = countAdjacent(board, row, col, 'O');
+    
+        if (adjacentIndustryCount > 0) {
+            return 1;
+        } else {
+            return adjacentResidentialCount + adjacentCommercialCount + (adjacentParkCount * 2);
+        }
+    }
+    
+    function calculateIndustryScore(board, row, col) {
+        return board.flat().filter(cell => cell === 'I').length;
+    }
+    
+    function calculateCommercialScore(board, row, col) {
+        return countAdjacent(board, row, col, 'C');
+    }
+    
+    function calculateParkScore(board, row, col) {
+        return countAdjacent(board, row, col, 'O');
+    }
+    
+    function calculateRoadScore(board, row, col) {
+        let roadCount = 0;
+        for (let c = 0; c < boardSize; c++) {
+            if (board[row][c] === '*') {
+                roadCount++;
+            }
+        }
+        return roadCount;
+    }
+
+    function endGameIfNeeded() {
+        if (turnsExceeded === 0) {
+            alert(`Game Over: Upkeep has exceeded profit for 20 turns! Final Score: ${score}`);
+            UpdateLeaderBoard(score);
+            resetGame();
+            return true;
+        }
+        return false;
+    }
+
+    async function UpdateLeaderBoard(score) {
+        const APIKEY = '6598fa970b0868856f232bcb';
+        const settings = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "x-apikey": APIKEY,
+                "Cache-Control": "no-cache"
+            }
+        };
+    
+        try {
+            const response = await fetch("https://frontenddev-975b.restdb.io/rest/ngee-ann-city-leaderboard", settings);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            const data = await response.json();
+            console.log("Fetched leaderboard data:", data);
+    
+            // Filter data where mode is "freeplay"
+            const freeplayEntries = data.filter(entry => entry.mode === "freeplay");
+    
+            // Sort freeplayEntries from highest to lowest score
+            freeplayEntries.sort((a, b) => b.score - a.score);
+    
+            // Check if the new score is high enough to be in the top 10
+            const isTopScore = freeplayEntries.length < 10 || score > freeplayEntries[9].score;
+    
+            if (isTopScore) {
+                // Prompt for username
+                const username = prompt("Congratulations! You've made it to the top 10. Please enter your name:");
+                
+                if (username) {
+                    const newEntry = {
+                        username: username,
+                        score: score,
+                        mode: "freeplay"
+                    };
+    
+                    const settings_Post = {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "x-apikey": APIKEY,
+                            "Cache-Control": "no-cache"
+                        },
+                        body: JSON.stringify(newEntry)
+                    };
+    
+                    const postResponse = await fetch("https://frontenddev-975b.restdb.io/rest/ngee-ann-city-leaderboard", settings_Post);
+                    if (!postResponse.ok) {
+                        throw new Error('Error updating leaderboard');
+                    }
+    
+                    alert("Your score has been added to the leaderboard!");
+                    fadeOutAndNavigate('mainpage.html');
+                }
+            } else {
+                alert("Great game! Unfortunately, your score didn't make it to the top 10 this time.");
+            }
+    
+        } catch (error) {
+            console.error("There was a problem updating the leaderboard:", error);
+        }
     }
 
     updateStickyBar();
