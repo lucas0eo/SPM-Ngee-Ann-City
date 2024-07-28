@@ -29,26 +29,11 @@ document.addEventListener('DOMContentLoaded', function () {
     demolishButton.textContent = 'Demolish';
     function printBoard() {
         gridContainer.innerHTML = '';
-        gridContainer.style.gridTemplateColumns = `repeat(${boardSize + 1}, 30px)`;
-
-        const columnHeaders = document.createElement('div');
-        columnHeaders.classList.add('grid-header');
-        columnHeaders.textContent = ' ';
-        gridContainer.appendChild(columnHeaders);
-
-        for (let i = 0; i < boardSize; i++) {
-            const headerCell = document.createElement('div');
-            headerCell.classList.add('grid-header');
-            headerCell.textContent = i + 1;
-            gridContainer.appendChild(headerCell);
-        }
-
+        gridContainer.style.gridTemplateColumns = `repeat(${boardSize}, 30px)`; // Adjust to boardSize only
+    
+        // Column and row headers have been removed, as commented out previously.
+    
         for (let r = 0; r < boardSize; r++) {
-            const rowHeader = document.createElement('div');
-            rowHeader.classList.add('grid-header');
-            rowHeader.textContent = String.fromCharCode(65 + r);
-            gridContainer.appendChild(rowHeader);
-
             for (let c = 0; c < boardSize; c++) {
                 const cell = document.createElement('div');
                 cell.classList.add('grid-cell');
@@ -57,14 +42,15 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (demolishMode) {
                         demolishBuilding(r, c);
                         demolishButton.classList.remove('highlight');
-                        demolishMode=false;
-                        check = isBoardEmpty();
-                        if (check === true){
+                        demolishMode = false;
+                        let check = isBoardEmpty();
+                        if (check === true) {
                             boardNotEmpty = false;
-                            console.log("HI")
+                            console.log("HI");
                         }
                     } else if (selectedLetter !== '' && board[r][c] === ' ') {
                         board[r][c] = selectedLetter;
+                        console.log(turnsExceeded);
                         updateProfitAndUpkeep();
                         updateStickyBar();
                         printBoard();
@@ -74,7 +60,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     } else {
                         alert('Please select a letter from the sticky bar.');
                     }
-
+    
                     if (r === boardSize - 1 || c === boardSize - 1) {
                         expandBoard();
                         printBoard();
@@ -120,7 +106,6 @@ document.addEventListener('DOMContentLoaded', function () {
         score = 0;
         let residentialUpkeep = 0;
         let visited = Array.from({ length: boardSize }, () => Array(boardSize).fill(false));
-
         for (let r = 0; r < boardSize; r++) {
             for (let c = 0; c < boardSize; c++) {
                 let building = board[r][c];
@@ -160,19 +145,17 @@ document.addEventListener('DOMContentLoaded', function () {
         profitElement.textContent = `Profit: ${profit}`;
         upkeepElement.textContent = `Upkeep: ${upkeep}`;
         scoreElement.textContent = `Score: ${score}`;
-    
+        console.log(turnsExceeded)
         if (upkeep > profit) {
             turnsExceeded--;
             turnsExceededElement.textContent = `Upkeep > Profit: ${turnsExceeded} turns left`;
-            if (turnsExceeded = 0) {
-                turnsExceededElement.textContent = `Upkeep > Profit: ${turnsExceeded} turns left`;
-            }
         } else {
             // Reset the count if profit is greater than or equal to upkeep
             turnsExceeded = 20;
             turnsExceededElement.textContent = ''; // Clear the message
         }
-    
+        console.log(turnsExceeded)
+
         if (endGameIfNeeded()) {
             // Game has ended, handle accordingly
             return;
