@@ -149,6 +149,9 @@ document.addEventListener('DOMContentLoaded', function () {
         if (upkeep > profit) {
             turnsExceeded--;
             turnsExceededElement.textContent = `Upkeep > Profit: ${turnsExceeded} turns left`;
+            if (turnsExceeded === 0) {
+                turnsExceededElement.textContent = `Upkeep > Profit: ${turnsExceeded} turns left`;
+            }
         } else {
             // Reset the count if profit is greater than or equal to upkeep
             turnsExceeded = 20;
